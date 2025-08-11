@@ -229,11 +229,12 @@ export default function Home() {
 
       {/* Banner Image */}
       <section className="relative h-96 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/50 to-purple-900/50 z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-r "></div>
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=2074&q=80')`
+            backgroundImage: `url('/landing_page.jpg')`,
+            backgroundSize: '100%'
           }}
         ></div>
         <div className="relative z-20 h-full flex items-center justify-center">
