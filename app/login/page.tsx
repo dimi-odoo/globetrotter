@@ -16,6 +16,7 @@ export default function LoginPage() {
     username: '',
     password: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const message = searchParams.get('message');
@@ -108,7 +109,7 @@ export default function LoginPage() {
         </div>
       </div>
       {/* Right Side: Login Form */}
-      <div className="w-full md:w-1/2 h-full bg-white/80 backdrop-blur-lg flex flex-col justify-center p-16 mb-10">
+      <div className="w-full md:w-1/2 h-full bg-white/80 backdrop-blur-lg flex flex-col justify-center items-center p-16">
         <div className="max-w-md w-full mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back to GlobeTrotter</h2>
@@ -163,16 +164,38 @@ export default function LoginPage() {
                   Forgot password?
                 </Link>
               </div>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                required
-                value={formData.password}
-                onChange={handleInputChange}
-                className="w-full px-5 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 bg-white/80 placeholder-gray-400 hover:border-blue-300 shadow-sm"
-                placeholder="Enter your password"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  required
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="w-full px-5 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 bg-white/80 placeholder-gray-400 hover:border-blue-300 shadow-sm text-gray-900 pr-12"
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    // Eye (open)
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12C4.286 8.228 8.349 5.25 12 5.25c3.651 0 7.714 2.978 9.75 6.75-2.036 3.772-6.099 6.75-9.75 6.75-3.651 0-7.714-2.978-9.75-6.75z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0z" />
+                    </svg>
+                  ) : (
+                    // Eye Slash (closed)
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 2.25 12c2.036 3.772 6.099 6.75 9.75 6.75 1.772 0 3.543-.443 5.02-1.223M6.53 6.53A6.75 6.75 0 0 1 12 5.25c3.651 0 7.714 2.978 9.75 6.75a10.477 10.477 0 0 1-1.227 1.977M6.53 6.53l10.94 10.94" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
             <div className="flex items-center mb-2">
               <input
