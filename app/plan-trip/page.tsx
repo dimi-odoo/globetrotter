@@ -105,7 +105,7 @@ export default function PlanTrip() {
   const generateSuggestionsWithGemini = async () => {
     setLoading(true);
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       
       const destinationInfo = indianDestinations.find(d => d.id === tripPlan.destination);
       const tripDuration = calculateDays();
@@ -269,7 +269,7 @@ export default function PlanTrip() {
             <div className="flex items-center">
               <Link href="/" className="text-2xl font-bold text-gray-900">
                 Globe<span className="text-blue-600">trotter</span>
-                <span className="text-sm text-orange-500 ml-2">India</span>
+                {/* <span className="text-sm text-orange-500 ml-2">India</span> */}
               </Link>
             </div>
             <div className="flex items-center space-x-4">
@@ -610,7 +610,7 @@ export default function PlanTrip() {
             <div>
               <h3 className="text-2xl font-bold mb-4">
                 Globe<span className="text-blue-400">trotter</span>
-                <span className="text-orange-400 text-sm ml-2">India</span>
+                {/* <span className="text-orange-400 text-sm ml-2">India</span> */}
               </h3>
               <p className="text-gray-400">
                 Your personalized travel planning companion for incredible India.
