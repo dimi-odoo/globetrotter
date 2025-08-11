@@ -1,711 +1,345 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { defaultAvatars } from "@/lib/defaultAvatars";
 
-interface User {
-  _id: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  dateOfBirth: string;
-  gender: string;
-  address: string;
-  city: string;
-  country: string;
-  occupation: string;
-  profilePhoto: string;
-  createdAt: string;
-}
-
+// Types
 interface Trip {
   id: string;
-  destination: string;
-  startDate: string;
-  endDate: string;
-  status: 'planned' | 'completed' | 'cancelled';
+  title: string;
+  dateRange: string;
+  location: string;
   image: string;
-  rating?: number;
-  budget: number;
-  participants: number;
-  description: string;
-  activities: string[];
 }
 
-export default function ProfilePage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingField, setEditingField] = useState<string | null>(null);
-  const [formData, setFormData] = useState<Partial<User>>({});
-  const [plannedTrips, setPlannedTrips] = useState<Trip[]>([]);
-  const [previousTrips, setPreviousTrips] = useState<Trip[]>([]);
-  const [activeTab, setActiveTab] = useState<'planned' | 'previous'>('planned');
-  const [loading, setLoading] = useState(true);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
-
-  // Mock data for demonstration
-  const mockPlannedTrips: Trip[] = [
-    {
-      id: '1',
-      destination: 'Tokyo, Japan',
-      startDate: '2025-09-15',
-      endDate: '2025-09-22',
-      status: 'planned',
-      image: '🏯',
-      budget: 3500,
-      participants: 2,
-      description: 'Exploring the vibrant culture of Tokyo with visits to temples, modern districts, and authentic cuisine.',
-      activities: ['Temple visits', 'Sushi making class', 'Mount Fuji day trip', 'Shopping in Shibuya']
-    },
-    {
-      id: '2',
-      destination: 'Paris, France',
-      startDate: '2025-12-10',
-      endDate: '2025-12-17',
-      status: 'planned',
-      image: '🗼',
-      budget: 2800,
-      participants: 1,
-      description: 'A romantic winter getaway exploring the City of Light during the holiday season.',
-      activities: ['Eiffel Tower visit', 'Louvre Museum', 'Seine River cruise', 'Christmas markets']
-    }
-  ];
-
-  const mockPreviousTrips: Trip[] = [
-    {
-      id: '3',
-      destination: 'Bali, Indonesia',
-      startDate: '2025-06-01',
-      endDate: '2025-06-10',
-      status: 'completed',
-      image: '🏝️',
-      rating: 5,
-      budget: 2200,
-      participants: 3,
-      description: 'Amazing tropical adventure with beautiful beaches, temples, and rice terraces.',
-      activities: ['Beach relaxation', 'Temple hopping', 'Rice terrace tour', 'Balinese cooking class']
-    },
-    {
-      id: '4',
-      destination: 'New York, USA',
-      startDate: '2025-03-20',
-      endDate: '2025-03-25',
-      status: 'completed',
-      image: '🗽',
-      rating: 4,
-      budget: 1800,
-      participants: 1,
-      description: 'Urban exploration of the Big Apple with Broadway shows and iconic landmarks.',
-      activities: ['Broadway show', 'Central Park', 'Statue of Liberty', 'Metropolitan Museum']
-    },
-    {
-      id: '5',
-      destination: 'Iceland',
-      startDate: '2025-01-15',
-      endDate: '2025-01-22',
-      status: 'completed',
-      image: '🏔️',
-      rating: 5,
-      budget: 3200,
-      participants: 2,
-      description: 'Winter wonderland adventure with Northern Lights and stunning landscapes.',
-      activities: ['Northern Lights viewing', 'Blue Lagoon', 'Glacier hiking', 'Ice caves exploration']
-    }
-  ];
+export default function ProfileDashboardPage() {
+  const [user, setUser] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<"overview" | "trips" | "reviews" | "settings">("overview");
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      
-      // Transform the user data to match our interface
-      const transformedUser = {
-        ...parsedUser,
-        fullName: parsedUser.fullName || `${parsedUser.firstName || ''} ${parsedUser.lastName || ''}`.trim(),
-        phone: parsedUser.phone || parsedUser.phoneNumber || '',
-        profilePhoto: parsedUser.profilePhoto || parsedUser.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'
-      };
-      
-      setUser(transformedUser);
-      setFormData(transformedUser);
-      
-      // Fetch trips from API
-      fetchTrips();
-    } else {
-      router.push('/login');
+    try {
+      const stored = localStorage.getItem("user");
+      if (stored) setUser(JSON.parse(stored));
+    } catch {
+      // ignore
     }
-    setLoading(false);
-  }, [router]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsProfileDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
   }, []);
 
-  const fetchTrips = async () => {
-    try {
-      const response = await fetch('/api/user/trips');
-      if (response.ok) {
-        const data = await response.json();
-        setPlannedTrips(data.plannedTrips || []);
-        setPreviousTrips(data.previousTrips || []);
-      } else {
-        // Fallback to mock data if API fails
-        setPlannedTrips(mockPlannedTrips);
-        setPreviousTrips(mockPreviousTrips);
-      }
-    } catch (error) {
-      console.error('Error fetching trips:', error);
-      // Fallback to mock data
-      setPlannedTrips(mockPlannedTrips);
-      setPreviousTrips(mockPreviousTrips);
-    }
-  };
-
-  const handleEditClick = (field: string) => {
-    setEditingField(field);
-    setIsEditing(true);
-  };
-
-  const handleSaveEdit = async () => {
-    if (!user || !editingField) return;
-
-    try {
-      const response = await fetch('/api/user/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setIsEditing(false);
-        setEditingField(null);
-        setSaveMessage('Profile updated successfully!');
-        setTimeout(() => setSaveMessage(null), 3000);
-      } else {
-        console.error('Failed to update profile');
-        setSaveMessage('Failed to update profile. Please try again.');
-        setTimeout(() => setSaveMessage(null), 3000);
-      }
-    } catch (error) {
-      console.error('Error updating profile:', error);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setFormData(user || {});
-    setIsEditing(false);
-    setEditingField(null);
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleAvatarChange = async () => {
-    // Generate a new random avatar
-    const avatarOptions = [
-      'avataaars', 'big-smile', 'bottts', 'fun-emoji', 'identicon', 
-      'initials', 'lorelei', 'micah', 'miniavs', 'open-peeps'
-    ];
-    const randomStyle = avatarOptions[Math.floor(Math.random() * avatarOptions.length)];
-    const randomSeed = Math.random().toString(36).substring(7);
-    const newAvatar = `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${randomSeed}`;
-    
-    try {
-      const response = await fetch('/api/user/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ profilePhoto: newAvatar }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setSaveMessage('Avatar updated successfully!');
-        setTimeout(() => setSaveMessage(null), 3000);
-      } else {
-        console.error('Failed to update avatar');
-        setSaveMessage('Failed to update avatar. Please try again.');
-        setTimeout(() => setSaveMessage(null), 3000);
-      }
-    } catch (error) {
-      console.error('Error updating avatar:', error);
-      setSaveMessage('Error updating avatar. Please try again.');
-      setTimeout(() => setSaveMessage(null), 3000);
-    }
-  };
-
-  const handleTripAction = async (tripId: string, action: 'edit' | 'cancel' | 'view' | 'book-again') => {
-    switch (action) {
-      case 'edit':
-        // Navigate to edit trip page
-        router.push(`/plan-trip?edit=${tripId}`);
-        break;
-      case 'cancel':
-        if (confirm('Are you sure you want to cancel this trip?')) {
-          try {
-            const response = await fetch(`/api/user/trips?tripId=${tripId}`, {
-              method: 'DELETE',
-            });
-            if (response.ok) {
-              await fetchTrips(); // Refresh trips
-            }
-          } catch (error) {
-            console.error('Error cancelling trip:', error);
-          }
-        }
-        break;
-      case 'view':
-        router.push(`/trips/${tripId}`);
-        break;
-      case 'book-again':
-        router.push(`/plan-trip?template=${tripId}`);
-        break;
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-    setIsProfileDropdownOpen(false);
-    router.push('/');
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  const renderEditableField = (field: string, label: string, value: string, type: string = 'text') => {
-    const isCurrentlyEditing = editingField === field && isEditing;
-
+  const avatarUrl = useMemo(() => {
     return (
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-            {isCurrentlyEditing ? (
-              <div className="space-y-2">
-                {type === 'select' && field === 'gender' ? (
-                  <select
-                    value={formData[field as keyof User] || value}
-                    onChange={(e) => handleInputChange(field, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                    <option value="prefer-not-to-say">Prefer not to say</option>
-                  </select>
-                ) : (
-                  <input
-                    type={type}
-                    value={formData[field as keyof User] || value}
-                    onChange={(e) => handleInputChange(field, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                )}
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSaveEdit}
-                    className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={handleCancelEdit}
-                    className="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex justify-between items-center">
-                <p className="text-gray-900">{value || 'Not specified'}</p>
-                <button
-                  onClick={() => handleEditClick(field)}
-                  className="text-blue-600 hover:text-blue-800 text-sm"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      user?.profilePhoto ||
+      user?.avatar ||
+      defaultAvatars?.[0]?.url ||
+      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400&auto=format&fit=crop"
     );
-  };
+  }, [user]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  const displayName = useMemo(() => {
+    if (!user) return "Shrey Mehta";
+    const first = user.firstName || "";
+    const last = user.lastName || "";
+    return (first || last) ? `${first} ${last}`.trim() : (user.username || "Traveler");
+  }, [user]);
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-          <p className="text-gray-600 mb-6">Please log in to view your profile.</p>
-          <Link href="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
-            Login
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const location = user?.city && user?.country ? `${user.city}, ${user.country}` : "Bharuch, India";
+  const memberSince = user?.createdAt ? new Date(user.createdAt).getFullYear() : 2025;
+  const bio = user?.description || "Good Man";
+
+  const preplannedTrips: Trip[] = [
+    {
+      id: "paris-adventure",
+      title: "Paris Adventure",
+      dateRange: "Mar 15 - Mar 22, 2024",
+      location: "Paris, France",
+      image: "https://images.unsplash.com/photo-1511735111819-9a3f7709049c?q=80&w=1400&auto=format&fit=crop",
+    },
+    {
+      id: "tokyo-explorer",
+      title: "Tokyo Explorer",
+      dateRange: "Apr 5 - Apr 15, 2024",
+      location: "Tokyo, Japan",
+      image: "https://images.unsplash.com/photo-1504805572947-34fad45aed93?q=80&w=1400&auto=format&fit=crop",
+    },
+    {
+      id: "greek-islands",
+      title: "Greek Islands",
+      dateRange: "May 20 - May 30, 2024",
+      location: "Santorini, Greece",
+      image: "https://images.unsplash.com/photo-1506846547053-0ba0e554624e?q=80&w=1400&auto=format&fit=crop",
+    },
+  ];
+
+  const previousTrips: Trip[] = [
+    {
+      id: "bali-retreat",
+      title: "Bali Retreat",
+      dateRange: "Dec 10 - Dec 20, 2023",
+      location: "Bali, Indonesia",
+      image: "https://images.unsplash.com/photo-1518544889286-bc53ef7cf0d2?q=80&w=1400&auto=format&fit=crop",
+    },
+    {
+      id: "swiss-alps",
+      title: "Swiss Alps",
+      dateRange: "Nov 5 - Nov 15, 2023",
+      location: "Switzerland",
+      image: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?q=80&w=1400&auto=format&fit=crop",
+    },
+    {
+      id: "maldives-paradise",
+      title: "Maldives Paradise",
+      dateRange: "Oct 1 - Oct 10, 2023",
+      location: "Maldives",
+      image: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=1400&auto=format&fit=crop",
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="text-2xl font-bold text-gray-900">
-                Globe<span className="text-blue-600">trotter</span>
-              </Link>
-            </div>
-            <nav className="flex items-center space-x-6">
-              {/* <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">Dashboard</Link> */}
-              <Link href="/plan-trip" className="text-gray-600 hover:text-gray-900">Plan Trip</Link>
-              <Link href="/my-trips" className="text-gray-600 hover:text-gray-900">My Trips</Link>
-              
-              {user && (
-                <div className="relative" ref={dropdownRef}>
-                  <button
-                    onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                    className="flex items-center text-blue-600 font-medium hover:text-blue-800"
-                  >
-                    <img
-                      src={user.profilePhoto}
-                      alt="Profile"
-                      className="w-8 h-8 rounded-full mr-2"
-                    />
-                    Profile
-                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  
-                  {isProfileDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border">
-                      <Link
-                        href="/dashboard"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setIsProfileDropdownOpen(false)}
-                      >
-                        📊 Dashboard
-                      </Link>
-                      <Link
-                        href="/profile"
-                        className="block px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 font-medium"
-                        onClick={() => setIsProfileDropdownOpen(false)}
-                      >
-                        👤 View Profile
-                      </Link>
-                      <Link
-                        href="/my-trips"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setIsProfileDropdownOpen(false)}
-                      >
-                        ✈️ My Trips
-                      </Link>
-                      <hr className="my-1" />
-                      <button
-                        onClick={handleLogout}
-                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                      >
-                        🚪 Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </nav>
-          </div>
-        </div>
+    <div className="relative min-h-screen bg-slate-50">
+      {/* decorative background */}
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-gradient-to-br from-blue-400/20 to-indigo-400/10 blur-3xl" />
+        <div className="absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-gradient-to-tr from-teal-300/20 to-emerald-400/10 blur-3xl" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Success Message */}
-        {saveMessage && (
-          <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span className="text-green-800">{saveMessage}</span>
-            </div>
+      <div className="mx-auto max-w-7xl px-4 py-6 lg:py-10">
+        {/* Top bar */}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Profile</h1>
+            <p className="mt-1 text-sm text-slate-600">Manage your travel profile, trips and reviews</p>
           </div>
-        )}
-
-        {/* Profile Header */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            <div className="relative">
-              <img
-                src={user.profilePhoto}
-                alt="Profile"
-                className="w-32 h-32 rounded-full border-4 border-blue-100"
-              />
-              <button 
-                onClick={handleAvatarChange}
-                className="absolute bottom-2 right-2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 shadow-lg"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </button>
-            </div>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{user.fullName || 'User Name'}</h1>
-              <p className="text-gray-600 mb-4">{user.email || 'No email'}</p>
-              <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                <span>📍 {user.city || 'Unknown'}, {user.country || 'Unknown'}</span>
-                <span>💼 {user.occupation || 'Not specified'}</span>
-                <span>📅 Member since {formatDate(user.createdAt)}</span>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <button 
-                onClick={handleAvatarChange}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium"
-              >
-                Change Avatar
-              </button>
-              <Link
-                href="/plan-trip"
-                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 font-medium"
-              >
-                Plan New Trip
-              </Link>
-            </div>
+          <div className="flex items-center gap-3">
+            <Link href="#" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M11 11V6h2v5h5v2h-5v5h-2v-5H6v-2h5z"/></svg>
+              New Trip
+            </Link>
+            <Link href="#" className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">Edit Profile</Link>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Profile Information */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-lg p-6 sticky top-8">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Profile Information</h2>
-                {isEditing && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-orange-400 rounded-full animate-pulse"></div>
-                    <span className="text-sm text-orange-600">Editing...</span>
+        {/* Grid layout */}
+        <div className="grid grid-cols-12 gap-6">
+          {/* Sidebar */}
+          <aside className="col-span-12 lg:col-span-4 xl:col-span-3">
+            <div className="sticky top-6 space-y-6">
+              {/* Profile card */}
+              <div className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur">
+                <div className="flex items-start gap-4">
+                  <div className="h-16 w-16 overflow-hidden rounded-full ring-2 ring-slate-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
                   </div>
-                )}
-              </div>
-              <div className="space-y-4">
-                {renderEditableField('fullName', 'Full Name', user.fullName || '')}
-                {renderEditableField('email', 'Email', user.email || '', 'email')}
-                {renderEditableField('phone', 'Phone', user.phone || '', 'tel')}
-                {renderEditableField('dateOfBirth', 'Date of Birth', user.dateOfBirth || '', 'date')}
-                {renderEditableField('gender', 'Gender', user.gender || '', 'select')}
-                {renderEditableField('address', 'Address', user.address || '')}
-                {renderEditableField('city', 'City', user.city || '')}
-                {renderEditableField('country', 'Country', user.country || '')}
-                {renderEditableField('occupation', 'Occupation', user.occupation || '')}
-              </div>
-            </div>
-          </div>
+                  <div className="min-w-0">
+                    <h2 className="truncate text-lg font-semibold text-slate-900">{displayName}</h2>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+                      <span className="inline-flex items-center gap-1">
+                        <svg className="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
+                        {location}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <svg className="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="10" r="4"/><path d="M18 20a6 6 0 00-12 0"/></svg>
+                        Member since {memberSince}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm text-slate-700">{bio}</p>
+                  </div>
+                </div>
 
-          {/* Trips Section */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">My Trips</h2>
-                <div className="flex bg-gray-100 rounded-lg p-1">
+                {/* Socials */}
+                <div className="mt-4 flex items-center gap-3 text-slate-500">
+                  {[
+                    <svg key="tw" className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M22.46 6c-.77.35-1.6.58-2.46.69a4.27 4.27 0 001.88-2.36 8.53 8.53 0 01-2.7 1.03 4.26 4.26 0 00-7.25 3.88A12.11 12.11 0 013 4.89a4.25 4.25 0 001.32 5.68 4.22 4.22 0 01-1.93-.53v.05a4.26 4.26 0 003.42 4.18 4.3 4.3 0 01-1.92.07 4.27 4.27 0 003.98 2.96A8.54 8.54 0 012 19.54a12.07 12.07 0 006.56 1.92c7.87 0 12.18-6.52 12.18-12.17 0-.19 0-.37-.01-.56A8.67 8.67 0 0022.46 6z"/></svg>,
+                    <svg key="fb" className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 10-11.5 9.9v-7h-2.2V12h2.2V9.8c0-2.1 1.25-3.3 3.17-3.3.92 0 1.88.16 1.88.16v2.07h-1.06c-1.04 0-1.36.65-1.36 1.32V12h2.32l-.37 2.9h-1.95v7A10 10 0 0022 12z"/></svg>,
+                    <svg key="ig" className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2h10a5 5 0 015 5v10a5 5 0 01-5 5H7a5 5 0 01-5-5V7a5 5 0 015-5zm5 5.5A5.5 5.5 0 1112 18.5 5.5 5.5 0 0112 7.5z"/></svg>,
+                    <svg key="li" className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.6 4.12 5.5 3 5.5S1 4.6 1 3.5 1.88 1.5 3 1.5s1.98.9 1.98 2zM1.5 8h3V22h-3V8zM8.5 8h2.87v1.92h.04c.4-.76 1.39-1.56 2.86-1.56 3.06 0 3.63 2.02 3.63 4.65V22h-3v-6.74c0-1.61-.03-3.68-2.24-3.68-2.24 0-2.59 1.75-2.59 3.56V22h-3V8z"/></svg>,
+                  ].map((icon, i) => (
+                    <span key={i} className="cursor-pointer text-slate-400 hover:text-blue-600">{icon}</span>
+                  ))}
+                </div>
+
+                {/* Quick stats */}
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <StatMini label="Countries" value={15} />
+                  <StatMini label="Trips" value={24} />
+                  <StatMini label="Days" value={156} />
+                  <StatMini label="Reviews" value={48} />
+                </div>
+              </div>
+
+              {/* Navigation */}
+              <nav className="rounded-2xl border border-slate-200 bg-white/80 p-2 shadow-sm backdrop-blur">
+                {[
+                  { key: "overview", label: "Overview" },
+                  { key: "trips", label: "Trips" },
+                  { key: "reviews", label: "Reviews" },
+                  { key: "settings", label: "Settings" },
+                ].map((item) => (
                   <button
-                    onClick={() => setActiveTab('planned')}
-                    className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                      activeTab === 'planned'
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
+                    key={item.key}
+                    onClick={() => setActiveTab(item.key as any)}
+                    className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                      activeTab === item.key ? "bg-blue-50 text-blue-700" : "text-slate-700 hover:bg-slate-50"
                     }`}
                   >
-                    Planned Trips ({plannedTrips.length})
+                    <span>{item.label}</span>
+                    {activeTab === item.key && <span className="h-2 w-2 rounded-full bg-blue-600" />}
                   </button>
-                  <button
-                    onClick={() => setActiveTab('previous')}
-                    className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                      activeTab === 'previous'
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    Previous Trips ({previousTrips.length})
-                  </button>
+                ))}
+              </nav>
+            </div>
+          </aside>
+
+          {/* Main content */}
+          <main className="col-span-12 lg:col-span-8 xl:col-span-9">
+            {/* KPI cards */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <KpiCard title="Countries Visited" value="15" accent="from-blue-500 to-indigo-500" icon={
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
+              }/>
+              <KpiCard title="Total Trips" value="24" accent="from-emerald-500 to-teal-500" icon={
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/></svg>
+              }/>
+              <KpiCard title="Travel Days" value="156" accent="from-fuchsia-500 to-pink-500" icon={
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2h10a2 2 0 012 2v16a2 2 0 01-2 2H7a2 2 0 01-2-2V4a2 2 0 012-2z"/></svg>
+              }/>
+              <KpiCard title="Reviews" value="48" accent="from-amber-500 to-orange-500" icon={
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/></svg>
+              }/>
+            </div>
+
+            {/* Tabs content */}
+            {activeTab === "overview" && (
+              <div className="mt-8 space-y-8">
+                {/* Preplanned */}
+                <SectionHeader title="Preplanned Trips">
+                  <Link href="#" className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:underline">
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M11 11V6h2v5h5v2h-5v5h-2v-5H6v-2h5z"/></svg>
+                    Plan New Trip
+                  </Link>
+                </SectionHeader>
+                <CardGrid trips={preplannedTrips} />
+
+                {/* Previous */}
+                <SectionHeader title="Previous Trips">
+                  <Link href="#" className="text-sm font-medium text-blue-600 hover:underline">View All</Link>
+                </SectionHeader>
+                <CardGrid trips={previousTrips} />
+
+                {/* Activity */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <h3 className="text-base font-semibold text-slate-900">Recent Activity</h3>
+                  <ul className="mt-4 space-y-4">
+                    {[
+                      { title: "Reviewed Maldives Paradise", time: "2d ago" },
+                      { title: "Added Tokyo Explorer trip", time: "5d ago" },
+                      { title: "Reached 150 travel days milestone", time: "1w ago" },
+                    ].map((a, idx) => (
+                      <li key={idx} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                        <span>{a.title}</span>
+                        <span className="text-slate-500">{a.time}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
+            )}
 
-              {/* Planned Trips */}
-              {activeTab === 'planned' && (
-                <div className="space-y-4">
-                  {plannedTrips.length > 0 ? (
-                    plannedTrips.map((trip) => (
-                      <div key={trip.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-4">
-                            <div className="text-4xl">{trip.image}</div>
-                            <div className="flex-1">
-                              <h3 className="text-xl font-semibold text-gray-900 mb-2">{trip.destination}</h3>
-                              <p className="text-gray-600 mb-3">{trip.description}</p>
-                              <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-3">
-                                <span>📅 {formatDate(trip.startDate)} - {formatDate(trip.endDate)}</span>
-                                <span>💰 ${trip.budget}</span>
-                                <span>👥 {trip.participants} participant{trip.participants > 1 ? 's' : ''}</span>
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                {trip.activities.map((activity, index) => (
-                                  <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
-                                    {activity}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <button 
-                              onClick={() => handleTripAction(trip.id, 'edit')}
-                              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm"
-                            >
-                              Edit Trip
-                            </button>
-                            <button 
-                              onClick={() => handleTripAction(trip.id, 'cancel')}
-                              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="text-6xl mb-4">✈️</div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">No planned trips yet</h3>
-                      <p className="text-gray-600 mb-6">Start planning your next adventure!</p>
-                      <Link
-                        href="/plan-trip"
-                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium"
-                      >
-                        Plan Your First Trip
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              )}
+            {activeTab === "trips" && (
+              <div className="mt-8 space-y-8">
+                <SectionHeader title="All Trips" />
+                <CardGrid trips={[...preplannedTrips, ...previousTrips]} />
+              </div>
+            )}
 
-              {/* Previous Trips */}
-              {activeTab === 'previous' && (
-                <div className="space-y-4">
-                  {previousTrips.length > 0 ? (
-                    previousTrips.map((trip) => (
-                      <div key={trip.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-4">
-                            <div className="text-4xl">{trip.image}</div>
-                            <div className="flex-1">
-                              <h3 className="text-xl font-semibold text-gray-900 mb-2">{trip.destination}</h3>
-                              <p className="text-gray-600 mb-3">{trip.description}</p>
-                              <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-3">
-                                <span>📅 {formatDate(trip.startDate)} - {formatDate(trip.endDate)}</span>
-                                <span>💰 ${trip.budget}</span>
-                                <span>👥 {trip.participants} participant{trip.participants > 1 ? 's' : ''}</span>
-                              </div>
-                              {trip.rating && (
-                                <div className="flex items-center mb-3">
-                                  <span className="text-sm text-gray-600 mr-2">Your rating:</span>
-                                  <div className="flex">
-                                    {[...Array(5)].map((_, i) => (
-                                      <svg
-                                        key={i}
-                                        className={`w-4 h-4 ${
-                                          i < trip.rating! ? 'text-yellow-400' : 'text-gray-300'
-                                        }`}
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                      >
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                      </svg>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                              <div className="flex flex-wrap gap-2">
-                                {trip.activities.map((activity, index) => (
-                                  <span key={index} className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
-                                    {activity}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <button 
-                              onClick={() => handleTripAction(trip.id, 'view')}
-                              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 text-sm"
-                            >
-                              View Details
-                            </button>
-                            <button 
-                              onClick={() => handleTripAction(trip.id, 'book-again')}
-                              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm"
-                            >
-                              Book Again
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="text-6xl mb-4">📚</div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">No previous trips</h3>
-                      <p className="text-gray-600 mb-6">Your travel history will appear here after you complete trips.</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+            {activeTab === "reviews" && (
+              <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h3 className="text-base font-semibold text-slate-900">Reviews</h3>
+                <p className="mt-2 text-sm text-slate-600">You have 48 reviews. Review management coming soon.</p>
+              </div>
+            )}
+
+            {activeTab === "settings" && (
+              <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h3 className="text-base font-semibold text-slate-900">Profile Settings</h3>
+                <p className="mt-2 text-sm text-slate-600">Account preferences and privacy controls coming soon.</p>
+              </div>
+            )}
+          </main>
         </div>
       </div>
+    </div>
+  );
+}
+
+// UI helpers
+function KpiCard({ title, value, icon, accent }: { title: string; value: string | number; icon: React.ReactNode; accent: string }) {
+  return (
+    <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className={`pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-gradient-to-br ${accent} opacity-20 blur-2xl`} />
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-slate-500">{title}</p>
+          <p className="mt-1 text-2xl font-semibold text-slate-900">{value}</p>
+        </div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 shadow-inner">
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionHeader({ title, children }: { title: string; children?: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between">
+      <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+      {children}
+    </div>
+  );
+}
+
+function CardGrid({ trips }: { trips: Trip[] }) {
+  return (
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+      {trips.map((trip) => (
+        <TripCard key={trip.id} trip={trip} />
+      ))}
+    </div>
+  );
+}
+
+function TripCard({ trip }: { trip: Trip }) {
+  return (
+    <div className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
+      <div className="relative h-44 w-full">
+        <Image src={trip.image} alt={trip.title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+          <div className="max-w-[75%]">
+            <p className="truncate text-sm font-semibold text-white drop-shadow">{trip.title}</p>
+            <p className="mt-0.5 line-clamp-1 text-xs text-slate-200">{trip.location}</p>
+          </div>
+          <span className="rounded-full bg-white/90 px-2 py-0.5 text-xs font-medium text-slate-700 backdrop-blur">{trip.dateRange.split(",")[0]}</span>
+        </div>
+      </div>
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-3 text-xs text-slate-600">
+          <span className="inline-flex items-center gap-1"><svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a3 3 0 00-3 3v12a3 3 0 003 3h14a3 3 0 003-3V7a3 3 0 00-3-3zm1 15a1 1 0 01-1 1H5a1 1 0 01-1-1V10h16v9z"/></svg>{trip.dateRange}</span>
+          <span className="inline-flex items-center gap-1"><svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/></svg>{trip.location}</span>
+        </div>
+        <Link href="#" className="text-xs font-medium text-blue-600 hover:underline">View Details</Link>
+      </div>
+    </div>
+  );
+}
+
+function StatMini({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-center">
+      <div className="text-lg font-semibold text-slate-900">{value}</div>
+      <div className="text-xs text-slate-600">{label}</div>
     </div>
   );
 }
