@@ -75,23 +75,10 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen h-screen w-screen flex bg-white">
-      {/* Left Side: Image and Welcome Text */}
-      <div className="hidden md:flex flex-col justify-start items-start bg-gray-100 relative w-1/2 h-full">
-        <Image
-          src="/register_page.png" // Replace with your actual image path
-          alt="Join our community"
-          fill
-          className="object-cover absolute inset-0 z-0"
-        />
-        <div className="relative z-10 flex flex-col items-start justify-start h-full w-full p-16">
-          <h1 className="text-5xl font-extrabold text-white mb-4 drop-shadow-lg mt-10">Join Our Community</h1>
-          <p className="text-2xl text-white/90 drop-shadow">Create your personalized travel experience</p>
-        </div>
-      </div>
-      {/* Right Side: Register Form */}
-      <div className="w-full md:w-1/2 h-full bg-white/80 backdrop-blur-lg flex flex-col justify-center p-16 mb-10">
-        <div className="max-w-md w-full mx-auto">
+    <div className="min-h-screen w-screen flex items-center justify-center bg-white p-6">
+      {/* Register Form Centered */}
+      <div className="w-full h-auto bg-white/80 backdrop-blur-lg flex flex-col justify-center p-8 md:p-16">
+        <div className="max-w-3xl w-full mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
             <p className="text-gray-600">Join Globetrotter and start your journey</p>
@@ -101,13 +88,13 @@ export default function RegisterPage() {
               <p className="text-red-600 text-sm">{error}</p>
             </div>
           )}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Avatar Selection */}
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Choose Profile Photo
               </label>
-              <div className="grid grid-cols-5 gap-3">
+              <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-3">
                 {defaultAvatars.map((avatar) => (
                   <button
                     key={avatar.id}
@@ -129,41 +116,41 @@ export default function RegisterPage() {
                 ))}
               </div>
             </div>
+
             {/* Personal Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
-                  First Name *
-                </label>
-                <input
-                  type="text"
-                  id="firstName"
-                  name="firstName"
-                  required
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="John"
-                />
-              </div>
-              <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
-                  Last Name *
-                </label>
-                <input
-                  type="text"
-                  id="lastName"
-                  name="lastName"
-                  required
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Doe"
-                />
-              </div>
-            </div>
-            {/* Account Information */}
             <div>
+              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                First Name *
+              </label>
+              <input
+                type="text"
+                id="firstName"
+                name="firstName"
+                required
+                value={formData.firstName}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="John"
+              />
+            </div>
+            <div>
+              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                Last Name *
+              </label>
+              <input
+                type="text"
+                id="lastName"
+                name="lastName"
+                required
+                value={formData.lastName}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Doe"
+              />
+            </div>
+
+            {/* Account Information */}
+            <div className="md:col-span-2">
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
                 Username *
               </label>
@@ -178,7 +165,7 @@ export default function RegisterPage() {
                 placeholder="johndoe"
               />
             </div>
-            <div>
+            <div className="md:col-span-2">
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email Address *
               </label>
@@ -193,40 +180,40 @@ export default function RegisterPage() {
                 placeholder="john@example.com"
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                  Password *
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  required
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="••••••••"
-                />
-              </div>
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirm Password *
-                </label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
-            {/* Contact Information */}
+
             <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Password *
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                required
+                value={formData.password}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="••••••••"
+              />
+            </div>
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                Confirm Password *
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                required
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="••••••••"
+              />
+            </div>
+
+            {/* Contact Information */}
+            <div className="md:col-span-2">
               <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
                 Phone Number *
               </label>
@@ -241,59 +228,47 @@ export default function RegisterPage() {
                 placeholder="+1 (555) 123-4567"
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
-                  City *
-                </label>
-                <input
-                  type="text"
-                  id="city"
-                  name="city"
-                  required
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="New York"
-                />
-              </div>
-              <div>
-                <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
-                  Country *
-                </label>
-                <input
-                  type="text"
-                  id="country"
-                  name="country"
-                  required
-                  value={formData.country}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="United States"
-                />
-              </div>
-            </div>
+
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                Description
+              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
+                City *
               </label>
-              <textarea
-                id="description"
-                name="description"
-                rows={3}
-                value={formData.description}
+              <input
+                type="text"
+                id="city"
+                name="city"
+                required
+                value={formData.city}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                placeholder="Tell us about yourself..."
+                className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="New York"
               />
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {loading ? 'Creating Account...' : 'Create Account'}
-            </button>
+            <div>
+              <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
+                Country *
+              </label>
+              <input
+                type="text"
+                id="country"
+                name="country"
+                required
+                value={formData.country}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="United States"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {loading ? 'Creating Account...' : 'Create Account'}
+              </button>
+            </div>
           </form>
           <div className="mt-6 text-center">
             <p className="text-gray-600">
