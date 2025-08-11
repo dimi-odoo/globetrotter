@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import jwt from 'jsonwebtoken';
-import { connectToDatabase } from '@/lib/mongodb';
+import dbConnect from '@/lib/mongodb';
 
 // Initialize Google Calendar API with API key (for public calendar access)
 const calendar = google.calendar({ version: 'v3', auth: process.env.GOOGLE_API_KEY });
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
-      const { db } = await connectToDatabase();
+      await dbConnect();
       
       // For this demo, we'll create a simple calendar view without OAuth
       // In a production app, you would use OAuth tokens to create actual Google Calendar events
