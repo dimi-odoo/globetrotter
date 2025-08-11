@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -43,6 +43,8 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<'planned' | 'previous'>('planned');
   const [loading, setLoading] = useState(true);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   // Mock data for demonstration
@@ -129,6 +131,20 @@ export default function ProfilePage() {
     }
     setLoading(false);
   }, [router]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const fetchTrips = async () => {
     try {
@@ -253,6 +269,13 @@ export default function ProfilePage() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    setUser(null);
+    setIsProfileDropdownOpen(false);
+    router.push('/');
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -358,10 +381,61 @@ export default function ProfilePage() {
               </Link>
             </div>
             <nav className="flex items-center space-x-6">
-              <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">Dashboard</Link>
+              {/* <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">Dashboard</Link> */}
               <Link href="/plan-trip" className="text-gray-600 hover:text-gray-900">Plan Trip</Link>
               <Link href="/my-trips" className="text-gray-600 hover:text-gray-900">My Trips</Link>
-              <Link href="/profile" className="text-blue-600 font-medium">Profile</Link>
+              
+              {user && (
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                    className="flex items-center text-blue-600 font-medium hover:text-blue-800"
+                  >
+                    <img
+                      src={user.avatar}
+                      alt="Profile"
+                      className="w-8 h-8 rounded-full mr-2"
+                    />
+                    Profile
+                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {isProfileDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border">
+                      <Link
+                        href="/dashboard"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsProfileDropdownOpen(false)}
+                      >
+                        📊 Dashboard
+                      </Link>
+                      <Link
+                        href="/profile"
+                        className="block px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 font-medium"
+                        onClick={() => setIsProfileDropdownOpen(false)}
+                      >
+                        👤 View Profile
+                      </Link>
+                      <Link
+                        href="/my-trips"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsProfileDropdownOpen(false)}
+                      >
+                        ✈️ My Trips
+                      </Link>
+                      <hr className="my-1" />
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      >
+                        🚪 Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </nav>
           </div>
         </div>

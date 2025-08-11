@@ -10,8 +10,10 @@ export default function Home() {
   const [filterCategory, setFilterCategory] = useState('');
   const [sortBy, setSortBy] = useState('');
   const [user, setUser] = useState<any>(null);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const citiesScrollRef = useRef<HTMLDivElement>(null);
   const tripsScrollRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -21,6 +23,27 @@ export default function Home() {
       setUser(JSON.parse(userData));
     }
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    setUser(null);
+    setIsProfileDropdownOpen(false);
+    router.push('/');
+  };
 
   // Auto-scroll functionality
   useEffect(() => {
@@ -199,12 +222,55 @@ export default function Home() {
               {user ? (
                 <div className="flex items-center space-x-4">
                   <span className="text-gray-600">Welcome, {user.firstName}!</span>
-                  <Link
-                    href="/dashboard"
-                    className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors font-medium"
-                  >
-                    Dashboard
-                  </Link>
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                      className="flex items-center bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors font-medium"
+                    >
+                      <img
+                        src={user.avatar}
+                        alt="Profile"
+                        className="w-6 h-6 rounded-full mr-2"
+                      />
+                      Profile
+                      <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {isProfileDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border">
+                        <Link
+                          href="/dashboard"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                        >
+                          📊 Dashboard
+                        </Link>
+                        <Link
+                          href="/profile"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                        >
+                          👤 View Profile
+                        </Link>
+                        <Link
+                          href="/my-trips"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                        >
+                          ✈️ My Trips
+                        </Link>
+                        <hr className="my-1" />
+                        <button
+                          onClick={handleLogout}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        >
+                          🚪 Logout
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <>
