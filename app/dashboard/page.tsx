@@ -39,6 +39,10 @@ export default function DashboardPage() {
     router.push('/login');
   };
 
+  const handleEditProfile = () =>{
+    router.push('/profile');
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -153,7 +157,9 @@ export default function DashboardPage() {
           <div className="mt-8 pt-8 border-t">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+              <button
+              onClick={handleEditProfile} 
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
                 Edit Profile
               </button>
               <button className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors">
