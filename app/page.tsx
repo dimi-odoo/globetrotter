@@ -449,20 +449,21 @@ export default function Home() {
 
       {/* Banner Image */}
       <section className="relative h-96 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r "></div>
-        <div 
-          className="absolute inset-0 bg-contain bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url('/landing_page.jpg')`
-          }}
-        ></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-black/20 z-10"></div>
+        <Image
+          src="/landing_page.jpg"
+          alt="Discover India"
+          fill
+          className="object-cover"
+          priority
+        />
         <div className="relative z-20 h-full flex items-center justify-center">
           <div className="text-center text-white">
-            <h1 className="text-5xl md:text-6xl font-bold mb-4">
+            <h1 className="text-5xl md:text-6xl font-bold mb-4 drop-shadow-lg">
               Discover Incredible Places
             </h1>
-            <p className="text-xl md:text-2xl opacity-90">
-              Explore the diverse beauty and rich heritage of Earth
+            <p className="text-xl md:text-2xl opacity-90 drop-shadow-md">
+              Explore the diverse beauty and rich heritage of India
             </p>
           </div>
         </div>
