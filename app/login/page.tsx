@@ -144,20 +144,7 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
-              <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-                <div className="text-2xl font-bold text-indigo-600 mb-1">150+</div>
-                <div className="text-sm text-gray-600">Destinations</div>
-              </div>
-              <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-                <div className="text-2xl font-bold text-purple-600 mb-1">50k+</div>
-                <div className="text-sm text-gray-600">Travelers</div>
-              </div>
-              <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-                <div className="text-2xl font-bold text-cyan-600 mb-1">4.9★</div>
-                <div className="text-sm text-gray-600">Rating</div>
-              </div>
-            </div>
+            
           </div>
         </div>
 
