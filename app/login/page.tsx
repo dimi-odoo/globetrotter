@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Globe, User, Lock, Eye, EyeOff, CheckCircle, AlertCircle, ArrowRight, Sparkles } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [userPhoto, setUserPhoto] = useState('');
+  const [showUserCard, setShowUserCard] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     password: ''
@@ -22,6 +24,8 @@ export default function LoginPage() {
     const message = searchParams.get('message');
     if (message) {
       setSuccess(message);
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => setSuccess(''), 5000);
     }
   }, [searchParams]);
 
@@ -35,8 +39,9 @@ export default function LoginPage() {
 
   // Function to fetch user profile photo based on username
   const fetchUserPhoto = async (username: string) => {
-    if (!username) {
+    if (!username || username.length < 2) {
       setUserPhoto('');
+      setShowUserCard(false);
       return;
     }
 
@@ -44,12 +49,20 @@ export default function LoginPage() {
       const response = await fetch(`/api/user/photo?username=${encodeURIComponent(username)}`);
       if (response.ok) {
         const data = await response.json();
-        setUserPhoto(data.profilePhoto || '');
+        if (data.profilePhoto) {
+          setUserPhoto(data.profilePhoto);
+          setShowUserCard(true);
+        } else {
+          setUserPhoto('');
+          setShowUserCard(false);
+        }
       } else {
         setUserPhoto('');
+        setShowUserCard(false);
       }
     } catch (err) {
       setUserPhoto('');
+      setShowUserCard(false);
     }
   };
 
@@ -95,138 +108,252 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen h-screen w-screen flex bg-white">
-      {/* Left Side: Image and Welcome Text */}
-      <div className="hidden md:flex flex-col justify-start items-start bg-gray-100 relative w-7/10 h-full">
-        <Image
-          src="/login_page.png"
-          alt="Start your journey"
-          fill
-          className="object-cover absolute inset-0 z-0"
-        />
-        <div className="relative z-10 flex flex-col items-start justify-start h-full w-full p-16">
-          <h1 className="text-5xl font-extrabold text-white mb-4 drop-shadow-lg mt-10">Start Your Journey</h1>
-          <p className="text-2xl text-white/90 drop-shadow">Plan, explore, and create unforgettable travel experiences</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Floating background elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full opacity-20 animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-cyan-400 to-blue-500 rounded-full opacity-20 animate-pulse delay-1000"></div>
+        <div className="absolute top-1/3 left-1/4 w-32 h-32 bg-gradient-to-br from-indigo-300 to-purple-400 rounded-full opacity-10 animate-pulse delay-500"></div>
       </div>
-      {/* Right Side: Login Form */}
-      <div className="w-full md:w-1/2 h-full bg-white/80 backdrop-blur-lg flex flex-col justify-center items-center p-16">
-        <div className="max-w-md w-full mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back to GlobeTrotter</h2>
-            <p className="text-gray-700">Sign in to continue your journey</p>
-          </div>
-          {/* User Photo Display */}
-          {userPhoto && (
-            <div className="flex justify-center mb-8">
-              <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-blue-200 shadow-lg">
-                <Image
-                  src={userPhoto}
-                  alt="User profile"
-                  fill
-                  className="object-cover"
-                  onError={() => setUserPhoto('')}
-                />
-              </div>
-            </div>
-          )}
-          {error && (
-            <div className="mb-6 p-4 bg-red-100/70 border border-red-300 rounded-lg">
-              <p className="text-red-700 text-sm font-medium">{error}</p>
-            </div>
-          )}
-          {success && (
-            <div className="mb-6 p-4 bg-green-100/70 border border-green-300 rounded-lg">
-              <p className="text-green-700 text-sm font-medium">{success}</p>
-            </div>
-          )}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-2">
-                Username or Email
-              </label>
-              <input
-                type="text"
-                id="username"
-                name="username"
-                required
-                value={formData.username}
-                onChange={handleInputChange}
-                className="w-full px-5 py-3  text-gray-700 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 bg-white/80 placeholder-gray-700 hover:border-blue-300 shadow-sm"
-                placeholder="Enter your username or email"
-              />
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
-                  Password
-                </label>
-                <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-800 font-semibold">
-                  Forgot password?
-                </Link>
-              </div>
+
+      <div className="relative w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+        {/* Left Side: Welcome Content */}
+        <div className="order-2 lg:order-1 text-center lg:text-left">
+          <div className="mb-8">
+            <div className="inline-flex items-center gap-3 mb-6">
               <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  name="password"
-                  required
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="w-full px-5 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 bg-white/80 placeholder-gray-400 hover:border-blue-300 shadow-sm text-gray-900 pr-12"
-                  placeholder="Enter your password"
-                />
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? (
-                    // Eye (open)
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12C4.286 8.228 8.349 5.25 12 5.25c3.651 0 7.714 2.978 9.75 6.75-2.036 3.772-6.099 6.75-9.75 6.75-3.651 0-7.714-2.978-9.75-6.75z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0z" />
-                    </svg>
-                  ) : (
-                    // Eye Slash (closed)
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 2.25 12c2.036 3.772 6.099 6.75 9.75 6.75 1.772 0 3.543-.443 5.02-1.223M6.53 6.53A6.75 6.75 0 0 1 12 5.25c3.651 0 7.714 2.978 9.75 6.75a10.477 10.477 0 0 1-1.227 1.977M6.53 6.53l10.94 10.94" />
-                    </svg>
-                  )}
-                </button>
+                <Globe className="w-12 h-12 text-indigo-600" />
+                <Sparkles className="w-5 h-5 text-purple-500 absolute -top-1 -right-1 animate-pulse" />
+              </div>
+              <span className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                Globetrotter
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+                Welcome Back,
+                <span className="block bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  Explorer
+                </span>
+              </h1>
+              <p className="text-xl text-gray-600 leading-relaxed">
+                Ready to continue your journey? Sign in to access your personalized travel dashboard and discover new adventures.
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Right Side: Login Form */}
+        <div className="order-1 lg:order-2">
+          <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 lg:p-12 animate-slideIn">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Login</h2>
+              <p className="text-gray-600">Access your travel dashboard</p>
+            </div>
+
+            {/* User Photo Card */}
+            {showUserCard && userPhoto && (
+              <div className="flex justify-center mb-8 animate-fadeIn">
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-4 border border-indigo-100">
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-lg ring-2 ring-indigo-100">
+                      <Image
+                        src={userPhoto}
+                        alt="User profile"
+                        fill
+                        className="object-cover"
+                        onError={() => {
+                          setUserPhoto('');
+                          setShowUserCard(false);
+                        }}
+                      />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-gray-700">Welcome back!</p>
+                      <p className="text-xs text-gray-500">@{formData.username}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Alerts */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 animate-shake">
+                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            )}
+
+            {success && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3 animate-fadeIn">
+                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                <p className="text-green-600 text-sm">{success}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Username Field */}
+              <div className="space-y-2">
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                  Username or Email
+                </label>
+                <div className="relative group">
+                  <User className="absolute left-3 top-3 w-5 h-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    required
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 placeholder:text-gray-400"
+                    placeholder="Enter your username or email"
+                  />
+                </div>
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                    Password
+                  </label>
+                  <Link 
+                    href="/forgot-password" 
+                    className="text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <div className="relative group">
+                  <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
+                    required
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 placeholder:text-gray-400"
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Remember Me */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <input
+                    id="remember"
+                    name="remember"
+                    type="checkbox"
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-colors"
+                  />
+                  <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">
+                    Remember me for 30 days
+                  </label>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl group"
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Signing In...
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2">
+                    Sign In
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                )}
+              </button>
+            </form>
+
+            {/* Social Login Options */}
+            <div className="mt-8">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                </div>
+               
               </div>
             </div>
-            <div className="flex items-center mb-2">
-              <input
-                id="remember"
-                name="remember"
-                type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">
-                Remember me
-              </label>
+
+            {/* Sign Up Link */}
+            <div className="text-center mt-8 pt-6 border-t border-gray-100">
+              <p className="text-gray-600">
+                Don't have an account?{' '}
+                <Link 
+                  href="/register" 
+                  className="text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+                >
+                  Create account
+                </Link>
+              </p>
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 px-4 rounded-xl font-bold text-lg shadow-md hover:from-blue-600 hover:to-indigo-600 focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            >
-              {loading ? 'Signing In...' : 'Sign In'}
-            </button>
-          </form>
-            <div className="text-center mt-4">
-            <p className="text-gray-700">
-              Don't have an account?{' '}
-              <Link href="/register" className="text-blue-600 hover:text-blue-800 font-semibold">
-                Create one
-              </Link>
-            </p>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          75% { transform: translateX(5px); }
+        }
+        
+        .animate-slideIn {
+          animation: slideIn 0.6s ease-out forwards;
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .animate-shake {
+          animation: shake 0.5s ease-in-out forwards;
+        }
+      `}</style>
     </div>
   );
 }
