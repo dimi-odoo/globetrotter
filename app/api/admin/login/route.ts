@@ -11,11 +11,15 @@ export async function POST(request: NextRequest) {
   try {
     const { username, password } = await request.json();
     
-    console.log('Admin login attempt:', { username, password });
+    // Trim whitespace from inputs
+    const trimmedUsername = username?.trim();
+    const trimmedPassword = password?.trim();
+    
+    console.log('Admin login attempt:', { username: trimmedUsername, password: trimmedPassword });
     console.log('Expected credentials:', ADMIN_CREDENTIALS);
 
     // Validate credentials
-    if (username !== ADMIN_CREDENTIALS.username || password !== ADMIN_CREDENTIALS.password) {
+    if (trimmedUsername !== ADMIN_CREDENTIALS.username || trimmedPassword !== ADMIN_CREDENTIALS.password) {
       console.log('Credentials mismatch');
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
@@ -27,7 +31,7 @@ export async function POST(request: NextRequest) {
       { 
         userId: 'admin', 
         role: 'admin',
-        username: username
+        username: trimmedUsername
       },
       process.env.JWT_SECRET || 'fallback-secret',
       { expiresIn: '24h' }
@@ -36,7 +40,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       token,
       admin: {
-        username,
+        username: trimmedUsername,
         role: 'admin'
       }
     });

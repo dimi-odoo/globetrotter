@@ -3,6 +3,31 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+} from 'chart.js';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
 
 interface AnalyticsData {
   userGrowth: Array<{
@@ -232,45 +257,256 @@ export default function AdminAnalytics() {
               <h3 className="text-lg font-medium text-gray-900">User & Trip Growth</h3>
             </div>
             <div className="p-6">
-              <div className="space-y-4">
-                {analytics?.userGrowth?.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">{item.month}</span>
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center">
-                        <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                        <span className="text-sm text-gray-900">{item.users} users</span>
-                      </div>
-                      <div className="flex items-center">
-                        <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                        <span className="text-sm text-gray-900">{item.trips} trips</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div style={{ height: '300px' }}>
+                <Line
+                  data={{
+                    labels: analytics?.userGrowth?.map(item => item.month) || [],
+                    datasets: [
+                      {
+                        label: 'New Users',
+                        data: analytics?.userGrowth?.map(item => item.users) || [],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                      },
+                      {
+                        label: 'New Trips',
+                        data: analytics?.userGrowth?.map(item => item.trips) || [],
+                        borderColor: 'rgb(16, 185, 129)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: 'top' as const,
+                      },
+                      tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                      },
+                    },
+                    scales: {
+                      x: {
+                        display: true,
+                        title: {
+                          display: true,
+                          text: 'Month'
+                        }
+                      },
+                      y: {
+                        display: true,
+                        title: {
+                          display: true,
+                          text: 'Count'
+                        },
+                        beginAtZero: true,
+                      }
+                    },
+                    interaction: {
+                      mode: 'nearest',
+                      axis: 'x',
+                      intersect: false
+                    },
+                  }}
+                />
               </div>
             </div>
           </div>
 
-          {/* Top Destinations */}
+          {/* Top Destinations Chart */}
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-4 border-b border-gray-200">
               <h3 className="text-lg font-medium text-gray-900">Top Destinations</h3>
             </div>
             <div className="p-6">
-              <div className="space-y-4">
-                {analytics?.topDestinations?.slice(0, 5).map((dest, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{dest.destination}</div>
-                      <div className="text-xs text-gray-500">{dest.state}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium text-gray-900">{dest.count} trips</div>
-                      <div className="text-xs text-gray-500">{dest.avgDuration} days avg</div>
-                    </div>
-                  </div>
-                ))}
+              <div style={{ height: '300px' }}>
+                <Bar
+                  data={{
+                    labels: analytics?.topDestinations?.map(dest => dest.destination) || [],
+                    datasets: [
+                      {
+                        label: 'Number of Trips',
+                        data: analytics?.topDestinations?.map(dest => dest.count) || [],
+                        backgroundColor: [
+                          'rgba(59, 130, 246, 0.8)',
+                          'rgba(16, 185, 129, 0.8)',
+                          'rgba(245, 158, 11, 0.8)',
+                          'rgba(239, 68, 68, 0.8)',
+                          'rgba(139, 92, 246, 0.8)',
+                          'rgba(236, 72, 153, 0.8)',
+                          'rgba(14, 165, 233, 0.8)',
+                          'rgba(34, 197, 94, 0.8)',
+                          'rgba(251, 146, 60, 0.8)',
+                          'rgba(168, 85, 247, 0.8)',
+                        ],
+                        borderColor: [
+                          'rgba(59, 130, 246, 1)',
+                          'rgba(16, 185, 129, 1)',
+                          'rgba(245, 158, 11, 1)',
+                          'rgba(239, 68, 68, 1)',
+                          'rgba(139, 92, 246, 1)',
+                          'rgba(236, 72, 153, 1)',
+                          'rgba(14, 165, 233, 1)',
+                          'rgba(34, 197, 94, 1)',
+                          'rgba(251, 146, 60, 1)',
+                          'rgba(168, 85, 247, 1)',
+                        ],
+                        borderWidth: 2,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: false,
+                      },
+                      tooltip: {
+                        callbacks: {
+                          afterLabel: function(context) {
+                            const dest = analytics?.topDestinations?.[context.dataIndex];
+                            return dest ? `Avg Duration: ${dest.avgDuration} days` : '';
+                          }
+                        }
+                      }
+                    },
+                    scales: {
+                      x: {
+                        display: true,
+                        title: {
+                          display: true,
+                          text: 'Destinations'
+                        }
+                      },
+                      y: {
+                        display: true,
+                        title: {
+                          display: true,
+                          text: 'Number of Trips'
+                        },
+                        beginAtZero: true,
+                      }
+                    },
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Second Row of Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          {/* Budget Distribution Pie Chart */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">Budget Distribution</h3>
+            </div>
+            <div className="p-6">
+              <div style={{ height: '300px' }}>
+                <Doughnut
+                  data={{
+                    labels: analytics?.budgetDistribution?.map(budget => budget.range) || [],
+                    datasets: [
+                      {
+                        data: analytics?.budgetDistribution?.map(budget => budget.count) || [],
+                        backgroundColor: [
+                          'rgba(59, 130, 246, 0.8)',
+                          'rgba(16, 185, 129, 0.8)',
+                          'rgba(245, 158, 11, 0.8)',
+                          'rgba(239, 68, 68, 0.8)',
+                          'rgba(139, 92, 246, 0.8)',
+                          'rgba(236, 72, 153, 0.8)',
+                        ],
+                        borderColor: [
+                          'rgba(59, 130, 246, 1)',
+                          'rgba(16, 185, 129, 1)',
+                          'rgba(245, 158, 11, 1)',
+                          'rgba(239, 68, 68, 1)',
+                          'rgba(139, 92, 246, 1)',
+                          'rgba(236, 72, 153, 1)',
+                        ],
+                        borderWidth: 2,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: 'right' as const,
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: function(context) {
+                            const budget = analytics?.budgetDistribution?.[context.dataIndex];
+                            return budget ? `${budget.range}: ${budget.count} trips (${budget.percentage}%)` : '';
+                          }
+                        }
+                      }
+                    },
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Popular Activities Chart */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">Popular Activities</h3>
+            </div>
+            <div className="p-6">
+              <div style={{ height: '300px' }}>
+                <Bar
+                  data={{
+                    labels: analytics?.activityTrends?.slice(0, 8).map(activity => activity.activity) || [],
+                    datasets: [
+                      {
+                        label: 'Selections',
+                        data: analytics?.activityTrends?.slice(0, 8).map(activity => activity.count) || [],
+                        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 2,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y' as const,
+                    plugins: {
+                      legend: {
+                        display: false,
+                      },
+                    },
+                    scales: {
+                      x: {
+                        display: true,
+                        title: {
+                          display: true,
+                          text: 'Number of Selections'
+                        },
+                        beginAtZero: true,
+                      },
+                      y: {
+                        display: true,
+                        title: {
+                          display: true,
+                          text: 'Activities'
+                        }
+                      }
+                    },
+                  }}
+                />
               </div>
             </div>
           </div>
