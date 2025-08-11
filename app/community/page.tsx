@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface User {
   _id: string;
   username: string;
+  firstName: string;
   email: string;
 }
 
@@ -213,6 +215,50 @@ export default function CommunityPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Navigation */}
+      <nav className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center">
+              <Link href="/" className="text-2xl font-bold text-gray-900">
+                Globe<span className="text-blue-600">trotter</span>
+              </Link>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/plan-trip"
+                className="text-gray-600 hover:text-gray-900 font-medium"
+              >
+                Plan Trip
+              </Link>
+              <Link
+                href="/calendar"
+                className="text-gray-600 hover:text-gray-900 font-medium"
+              >
+                Calendar
+              </Link>
+              <Link
+                href="/community"
+                className="text-blue-600 font-medium"
+              >
+                Community
+              </Link>
+              {user && (
+                <>
+                  <span className="text-gray-600">Welcome, {user.firstName}!</span>
+                  <Link
+                    href="/my-trips"
+                    className="text-gray-600 hover:text-gray-900 font-medium"
+                  >
+                    My Trips
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-4 py-6">

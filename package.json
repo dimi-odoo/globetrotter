@@ -16,6 +16,7 @@
     "bcryptjs": "^3.0.2",
     "chart.js": "^4.5.0",
     "framer-motion": "^12.23.12",
+    "googleapis": "^155.0.1",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.539.0",
     "mongoose": "^8.17.1",

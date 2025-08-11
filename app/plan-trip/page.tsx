@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
@@ -69,7 +69,7 @@ const budgetOptions = [
 ];
 
 // Initialize Gemini AI
-const genAI = new GoogleGenerativeAI('AIzaSyCYdvcHpwgN4COgqwUKwvZO_gdobr3NRZs');
+const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GOOGLE_GEMINI_API_KEY || '');
 
 export default function PlanTrip() {
   const router = useRouter();
@@ -405,6 +405,12 @@ export default function PlanTrip() {
                 className="text-gray-600 hover:text-gray-900 font-medium"
               >
                 Community
+              </Link>
+              <Link
+                href="/calendar"
+                className="text-gray-600 hover:text-gray-900 font-medium"
+              >
+                Calendar
               </Link>
               <Link
                 href="/"

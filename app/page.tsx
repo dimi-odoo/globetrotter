@@ -439,6 +439,12 @@ export default function Home() {
               >
                 Community
               </Link>
+              <Link
+                href="/calendar"
+                className="text-gray-600 hover:text-gray-900 font-medium"
+              >
+                Calendar
+              </Link>
               {user ? (
                 <div className="flex items-center space-x-4">
                   <span className="text-gray-600">Welcome, {user.firstName}!</span>

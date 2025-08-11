@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const GOOGLE_API_KEY = "AIzaSyDDtCfRgYYkOHk1IPqmh5Ao0Ojw-2-7eqI";
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -10,12 +10,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Place name is required' }, { status: 400 });
   }
 
+  if (!GOOGLE_API_KEY) {
+    return NextResponse.json({ error: 'Google API key not configured' }, { status: 500 });
+  }
+
   try {
     // Step 1: Search for the place
     const searchUrl = "https://maps.googleapis.com/maps/api/place/textsearch/json";
     const searchParamsStr = new URLSearchParams({
       query: `${placeName} tourism`,
-      key: GOOGLE_API_KEY
+      key: GOOGLE_API_KEY!
     });
     
     const searchResponse = await fetch(`${searchUrl}?${searchParamsStr.toString()}`);
@@ -29,7 +33,7 @@ export async function GET(request: NextRequest) {
       const photoParams = new URLSearchParams({
         maxwidth: "800",
         photoreference: photoRef,
-        key: GOOGLE_API_KEY
+        key: GOOGLE_API_KEY!
       });
       
       const imageUrl = `${photoUrl}?${photoParams.toString()}`;

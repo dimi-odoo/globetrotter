@@ -35,6 +35,7 @@ class RecommendedCityResponse(BaseModel):
 def get_all_cities():
     """Get all cities with their details and places"""
     result = []
+    print("\n\n\n\n------------------")
     for city_name, city_data in tourism_data.items():
         places = []
         for place in city_data["places"]:

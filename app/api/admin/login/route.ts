@@ -3,8 +3,8 @@ import jwt from 'jsonwebtoken';
 
 // Admin credentials (in production, store in database with hashed passwords)
 const ADMIN_CREDENTIALS = {
-  username: 'admin',
-  password: 'admin123' // In production, use bcrypt hash
+  username: process.env.ADMIN_USERNAME || 'admin',
+  password: process.env.ADMIN_PASSWORD || 'admin123' // In production, use bcrypt hash
 };
 
 export async function POST(request: NextRequest) {
