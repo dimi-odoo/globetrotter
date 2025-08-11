@@ -401,6 +401,12 @@ export default function PlanTrip() {
             </div>
             <div className="flex items-center space-x-4">
               <Link
+                href="/community"
+                className="text-gray-600 hover:text-gray-900 font-medium"
+              >
+                Community
+              </Link>
+              <Link
                 href="/"
                 className="text-gray-600 hover:text-gray-900 font-medium"
               >
