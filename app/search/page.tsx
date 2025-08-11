@@ -242,7 +242,7 @@ export default function SearchPage() {
               Discover amazing places and attractions across India
             </p>
           </div>
-<<<<<<< Updated upstream
+
 
           {/* Search Form */}
           <form onSubmit={handleSearch} className="max-w-4xl mx-auto">
@@ -302,7 +302,7 @@ export default function SearchPage() {
           </form>
         </div>
       </section>
-=======
+
         </div>
           </div>
 
@@ -351,44 +351,44 @@ export default function SearchPage() {
               </div>
 
               {/* Filters */}
-          {searchType === 'activities' && (
+                {searchType === 'activities' && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
+                  <select
+                    value={filterCategory}
+                    onChange={(e) => setFilterCategory(e.target.value)}
                 className="px-4 py-2 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              >
-                <option value="">All Categories</option>
-                <option value="Adventure">Adventure</option>
-                <option value="Cultural">Cultural</option>
-                <option value="Culinary">Culinary</option>
-                <option value="Sightseeing">Sightseeing</option>
-                <option value="Nature">Nature</option>
-              </select>
+                  >
+                    <option value="">All Categories</option>
+                    <option value="Adventure">Adventure</option>
+                    <option value="Cultural">Cultural</option>
+                    <option value="Culinary">Culinary</option>
+                    <option value="Sightseeing">Sightseeing</option>
+                    <option value="Nature">Nature</option>
+                  </select>
 
-              <select
-                value={priceRange}
-                onChange={(e) => setPriceRange(e.target.value)}
+                  <select
+                    value={priceRange}
+                    onChange={(e) => setPriceRange(e.target.value)}
                 className="px-4 py-2 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              >
-                <option value="">Any Price</option>
-                <option value="0-50">Under $50</option>
-                <option value="50-100">$50 - $100</option>
-                <option value="100-200">$100 - $200</option>
-                <option value="200-1000">$200+</option>
-              </select>
+                  >
+                    <option value="">Any Price</option>
+                    <option value="0-50">Under $50</option>
+                    <option value="50-100">$50 - $100</option>
+                    <option value="100-200">$100 - $200</option>
+                    <option value="200-1000">$200+</option>
+                  </select>
 
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
                 className="px-4 py-2 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              >
-                <option value="relevance">Sort by Relevance</option>
-                <option value="rating">Highest Rated</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-              </select>
-            </div>
+                >
+                  <option value="relevance">Sort by Relevance</option>
+                  <option value="rating">Highest Rated</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                </select>
+              </div>
           )}
 
               {/* Search Button */}
@@ -402,7 +402,7 @@ export default function SearchPage() {
           </div>
 
       {/* End Search Header */}
->>>>>>> Stashed changes
+
 
       {/* Search Results */}
       <section className="py-16">
@@ -429,7 +429,7 @@ export default function SearchPage() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {searchResults.map((result) => (
                   <SearchResultCard 
                     key={result.id} 
@@ -597,7 +597,7 @@ function SearchResultCard({ result, onClick }: SearchResultCardProps) {
                       </button>
                     </div>
                   </div>
-    </div>
+                </div>
   );
 }
 
@@ -641,7 +641,7 @@ function CitySection({ city }: { city: CityData }) {
         <Link href={`/city/${slug}`} className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
           See all attractions
         </Link>
-      </div>
+              </div>
 
       <h4 className="text-sm font-semibold text-gray-700 mb-3">Famous locations in {city.city}</h4>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -653,10 +653,10 @@ function CitySection({ city }: { city: CityData }) {
             <div className="flex items-center gap-2">
               <svg className="h-5 w-5 text-blue-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/></svg>
               <span className="text-gray-800">{place.place_name}</span>
-            </div>
           </div>
+        </div>
         ))}
-      </div>
+    </div>
     </section>
   );
 }
