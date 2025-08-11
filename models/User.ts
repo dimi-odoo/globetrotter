@@ -18,6 +18,7 @@ export interface IUser {
   occupation?: string;
   description: string;
   profilePhoto: string;
+  isActive?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -98,6 +99,10 @@ const userSchema = new mongoose.Schema<IUser>({
   profilePhoto: {
     type: String,
     required: [true, 'Profile photo is required']
+  },
+  isActive: {
+    type: Boolean,
+    default: true
   }
 }, {
   timestamps: true,
