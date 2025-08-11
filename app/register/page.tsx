@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [step, setStep] = useState(1);
+  const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -29,6 +30,10 @@ export default function RegisterPage() {
     country: '',
     description: ''
   });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -104,6 +109,11 @@ export default function RegisterPage() {
   };
 
   const getStepProgress = () => (step / 3) * 100;
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return null;
+  }
 
   const PasswordStrength = ({ password }: { password: string }) => {
     const checks = [
@@ -231,6 +241,7 @@ export default function RegisterPage() {
                         onChange={handleInputChange}
                         className="w-full pl-10 pr-4 py-3 border text-gray-700 border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
                         placeholder="First name"
+                        suppressHydrationWarning={true}
                       />
                     </div>
                   </div>
@@ -249,6 +260,7 @@ export default function RegisterPage() {
                         onChange={handleInputChange}
                         className="w-full pl-10 pr-4 py-3 border text-gray-700 border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
                         placeholder="Last name"
+                        suppressHydrationWarning={true}
                       />
                     </div>
                   </div>
@@ -281,6 +293,7 @@ export default function RegisterPage() {
                         onChange={handleInputChange}
                         className="w-full pl-10 pr-4 py-3 border text-gray-700 border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
                         placeholder="johndoe"
+                        suppressHydrationWarning={true}
                       />
                     </div>
                   </div>
@@ -301,6 +314,7 @@ export default function RegisterPage() {
                         onChange={handleInputChange}
                         className="w-full pl-10 pr-4 py-3 border text-gray-700 border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
                         placeholder="john@example.com"
+                        suppressHydrationWarning={true}
                       />
                     </div>
                   </div>
@@ -322,6 +336,7 @@ export default function RegisterPage() {
                           onChange={handleInputChange}
                           className="w-full pl-10 pr-10 py-3 border text-gray-700 border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
                           placeholder="••••••••"
+                          suppressHydrationWarning={true}
                         />
                         <button
                           type="button"
@@ -354,6 +369,7 @@ export default function RegisterPage() {
                               : 'border-gray-200'
                           }`}
                           placeholder="••••••••"
+                          suppressHydrationWarning={true}
                         />
                         <button
                           type="button"
@@ -398,6 +414,7 @@ export default function RegisterPage() {
                         onChange={handleInputChange}
                         className="w-full pl-10 pr-4 py-3 border border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
                         placeholder="+91 98765 43210"
+                        suppressHydrationWarning={true}
                       />
                     </div>
                   </div>
@@ -419,6 +436,7 @@ export default function RegisterPage() {
                           onChange={handleInputChange}
                           className="w-full pl-10 pr-4 py-3 border text-gray-700 border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
                           placeholder="Mumbai"
+                          suppressHydrationWarning={true}
                         />
                       </div>
                     </div>
@@ -438,6 +456,7 @@ export default function RegisterPage() {
                           onChange={handleInputChange}
                           className="w-full pl-10 pr-4 py-3 border text-gray-700 border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
                           placeholder="India"
+                          suppressHydrationWarning={true}
                         />
                       </div>
                     </div>

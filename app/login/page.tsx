@@ -14,11 +14,16 @@ export default function LoginPage() {
   const [success, setSuccess] = useState('');
   const [userPhoto, setUserPhoto] = useState('');
   const [showUserCard, setShowUserCard] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const message = searchParams.get('message');
@@ -106,6 +111,11 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex items-center justify-center p-4 relative overflow-hidden">
@@ -214,6 +224,7 @@ export default function LoginPage() {
                     onChange={handleInputChange}
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 placeholder:text-gray-400"
                     placeholder="Enter your username or email"
+                    suppressHydrationWarning={true}
                   />
                 </div>
               </div>
@@ -242,6 +253,7 @@ export default function LoginPage() {
                     onChange={handleInputChange}
                     className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 placeholder:text-gray-400"
                     placeholder="Enter your password"
+                    suppressHydrationWarning={true}
                   />
                   <button
                     type="button"
