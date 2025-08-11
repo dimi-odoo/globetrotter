@@ -152,7 +152,7 @@ export default function LoginPage() {
                 required
                 value={formData.username}
                 onChange={handleInputChange}
-                className="w-full px-5 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 bg-white/80 placeholder-gray-400 hover:border-blue-300 shadow-sm"
+                className="w-full px-5 py-3  text-gray-700 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 bg-white/80 placeholder-gray-700 hover:border-blue-300 shadow-sm"
                 placeholder="Enter your username or email"
               />
             </div>
