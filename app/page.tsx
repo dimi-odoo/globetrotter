@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -11,6 +12,7 @@ export default function Home() {
   const [user, setUser] = useState<any>(null);
   const citiesScrollRef = useRef<HTMLDivElement>(null);
   const tripsScrollRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     // Check if user is logged in
@@ -57,116 +59,120 @@ export default function Home() {
     console.log('Search:', { searchQuery, filterCategory, sortBy });
   };
 
-  // Mock data for previous trips
+  const handleCityClick = (cityId: string) => {
+    router.push(`/city/${cityId}`);
+  };
+
+  // Mock data for previous trips (Indian destinations)
   const previousTrips = [
     {
       id: 1,
-      destination: 'Paris, France',
+      destination: 'Goa',
       date: 'March 2024',
-      image: 'https://images.unsplash.com/photo-1502602898536-47ad22581b52?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       rating: 5,
       duration: '7 days'
     },
     {
       id: 2,
-      destination: 'Tokyo, Japan',
+      destination: 'Kerala Backwaters',
       date: 'January 2024',
-      image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       rating: 4,
-      duration: '10 days'
-    },
-    {
-      id: 3,
-      destination: 'Bali, Indonesia',
-      date: 'November 2023',
-      image: 'https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      rating: 5,
       duration: '5 days'
     },
     {
-      id: 4,
-      destination: 'New York, USA',
-      date: 'September 2023',
-      image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      rating: 4,
+      id: 3,
+      destination: 'Manali, Himachal Pradesh',
+      date: 'November 2023',
+      image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      rating: 5,
       duration: '6 days'
     },
     {
+      id: 4,
+      destination: 'Udaipur, Rajasthan',
+      date: 'September 2023',
+      image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      rating: 4,
+      duration: '4 days'
+    },
+    {
       id: 5,
-      destination: 'Rome, Italy',
+      destination: 'Rishikesh, Uttarakhand',
       date: 'July 2023',
-      image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       rating: 5,
-      duration: '8 days'
+      duration: '3 days'
     }
   ];
 
-  // Mock data for top cities
+  // Mock data for top Indian cities
   const topCities = [
     {
-      id: 1,
-      city: 'Paris',
-      country: 'France',
-      image: 'https://images.unsplash.com/photo-1502602898536-47ad22581b52?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      id: 'delhi',
+      city: 'Delhi',
+      state: 'Delhi',
+      image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       popular: true,
-      description: 'City of Light with iconic landmarks',
-      attractions: ['Eiffel Tower', 'Louvre Museum', 'Notre-Dame'],
-      rating: 4.8,
+      description: 'India\'s capital with rich history and culture',
+      attractions: ['Red Fort', 'India Gate', 'Qutub Minar'],
+      rating: 4.3,
+      visitors: '25M+'
+    },
+    {
+      id: 'mumbai',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      popular: true,
+      description: 'Financial capital and city of dreams',
+      attractions: ['Gateway of India', 'Marine Drive', 'Elephanta Caves'],
+      rating: 4.2,
+      visitors: '20M+'
+    },
+    {
+      id: 'jaipur',
+      city: 'Jaipur',
+      state: 'Rajasthan',
+      image: 'https://images.unsplash.com/photo-1599661046827-dacde6976549?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      popular: true,
+      description: 'The Pink City with royal palaces',
+      attractions: ['Hawa Mahal', 'Amber Fort', 'City Palace'],
+      rating: 4.5,
       visitors: '15M+'
     },
     {
-      id: 2,
-      city: 'Tokyo',
-      country: 'Japan',
-      image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      popular: true,
-      description: 'Modern metropolis meets ancient tradition',
-      attractions: ['Shibuya Crossing', 'Tokyo Tower', 'Senso-ji Temple'],
-      rating: 4.7,
+      id: 'bangalore',
+      city: 'Bangalore',
+      state: 'Karnataka',
+      image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      popular: false,
+      description: 'Silicon Valley of India with pleasant weather',
+      attractions: ['Lalbagh Garden', 'Bangalore Palace', 'Cubbon Park'],
+      rating: 4.1,
       visitors: '12M+'
     },
     {
-      id: 3,
-      city: 'New York',
-      country: 'USA',
-      image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      popular: true,
-      description: 'The city that never sleeps',
-      attractions: ['Times Square', 'Central Park', 'Statue of Liberty'],
-      rating: 4.6,
-      visitors: '13M+'
+      id: 'kolkata',
+      city: 'Kolkata',
+      state: 'West Bengal',
+      image: 'https://images.unsplash.com/photo-1558431382-27e303142255?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      popular: false,
+      description: 'Cultural capital with colonial architecture',
+      attractions: ['Victoria Memorial', 'Howrah Bridge', 'Dakshineswar Temple'],
+      rating: 4.0,
+      visitors: '10M+'
     },
     {
-      id: 4,
-      city: 'London',
-      country: 'United Kingdom',
-      image: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      id: 'chennai',
+      city: 'Chennai',
+      state: 'Tamil Nadu',
+      image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       popular: false,
-      description: 'Historic charm with royal heritage',
-      attractions: ['Big Ben', 'Tower Bridge', 'British Museum'],
-      rating: 4.5,
-      visitors: '11M+'
-    },
-    {
-      id: 5,
-      city: 'Barcelona',
-      country: 'Spain',
-      image: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      popular: false,
-      description: 'Architectural wonders and vibrant culture',
-      attractions: ['Sagrada Familia', 'Park Güell', 'Las Ramblas'],
-      rating: 4.7,
-      visitors: '9M+'
-    },
-    {
-      id: 6,
-      city: 'Dubai',
-      country: 'UAE',
-      image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      popular: false,
-      description: 'Luxury and innovation in the desert',
-      attractions: ['Burj Khalifa', 'Dubai Mall', 'Palm Jumeirah'],
-      rating: 4.4,
+      description: 'Gateway to South India with rich traditions',
+      attractions: ['Marina Beach', 'Kapaleeshwarar Temple', 'Fort St. George'],
+      rating: 3.9,
       visitors: '8M+'
     }
   ];
@@ -180,6 +186,7 @@ export default function Home() {
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-gray-900">
                 Globe<span className="text-blue-600">trotter</span>
+                <span className="text-sm text-orange-500 ml-2">India</span>
               </h1>
             </div>
             <div className="flex items-center space-x-4">
@@ -220,16 +227,16 @@ export default function Home() {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2074&q=80')`
+            backgroundImage: `url('https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=2074&q=80')`
           }}
         ></div>
         <div className="relative z-20 h-full flex items-center justify-center">
           <div className="text-center text-white">
             <h1 className="text-5xl md:text-6xl font-bold mb-4">
-              Discover Your Next Adventure
+              Discover Incredible India
             </h1>
             <p className="text-xl md:text-2xl opacity-90">
-              Explore the world with personalized travel experiences
+              Explore the diverse beauty and rich heritage of India
             </p>
           </div>
         </div>
@@ -243,14 +250,14 @@ export default function Home() {
               {/* Search Input */}
               <div className="md:col-span-2">
                 <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
-                  Where do you want to go?
+                  Where do you want to go in India?
                 </label>
                 <input
                   type="text"
                   id="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search destinations, cities, countries..."
+                  placeholder="Search cities, states, destinations..."
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
                 />
               </div>
@@ -267,12 +274,12 @@ export default function Home() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">All Categories</option>
+                  <option value="heritage">Heritage</option>
                   <option value="adventure">Adventure</option>
-                  <option value="relaxation">Relaxation</option>
-                  <option value="cultural">Cultural</option>
-                  <option value="business">Business</option>
-                  <option value="family">Family</option>
-                  <option value="romantic">Romantic</option>
+                  <option value="spiritual">Spiritual</option>
+                  <option value="beach">Beach</option>
+                  <option value="hill-station">Hill Station</option>
+                  <option value="wildlife">Wildlife</option>
                 </select>
               </div>
 
@@ -288,11 +295,10 @@ export default function Home() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">Relevance</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
                   <option value="rating">Highest Rated</option>
                   <option value="popular">Most Popular</option>
-                  <option value="newest">Newest</option>
+                  <option value="budget">Budget Friendly</option>
+                  <option value="distance">Nearest</option>
                 </select>
               </div>
             </div>
@@ -303,7 +309,7 @@ export default function Home() {
                 type="submit"
                 className="bg-blue-600 text-white px-12 py-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg shadow-lg"
               >
-                🔍 Search Destinations
+                🔍 Explore India
               </button>
             </div>
           </form>
@@ -315,10 +321,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Top Cities
+              Top Cities in India
             </h2>
             <p className="text-xl text-gray-600">
-              Discover the world's most popular travel destinations
+              Discover India's most popular travel destinations
             </p>
           </div>
 
@@ -333,7 +339,11 @@ export default function Home() {
           >
             <div className="flex gap-6 w-max">
               {[...topCities, ...topCities].map((city, index) => (
-                <div key={`${city.id}-${index}`} className="w-80 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer flex-shrink-0">
+                <div 
+                  key={`${city.id}-${index}`} 
+                  className="w-80 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer flex-shrink-0"
+                  onClick={() => handleCityClick(city.id)}
+                >
                   <div className="relative h-48 overflow-hidden rounded-t-2xl">
                     {city.popular && (
                       <div className="absolute top-4 right-4 bg-red-500 text-white text-xs px-3 py-1 rounded-full z-10 font-medium">
@@ -345,7 +355,7 @@ export default function Home() {
                     </div>
                     <Image
                       src={city.image}
-                      alt={`${city.city}, ${city.country}`}
+                      alt={`${city.city}, ${city.state}`}
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-300"
                     />
@@ -359,7 +369,7 @@ export default function Home() {
                       {city.city}
                     </h3>
                     <p className="text-gray-500 text-sm mb-3">
-                      {city.country}
+                      {city.state}
                     </p>
                     <p className="text-gray-600 mb-3 text-sm">
                       {city.description}
@@ -390,7 +400,7 @@ export default function Home() {
                 Your Previous Trips
               </h2>
               <p className="text-xl text-gray-600">
-                Relive your amazing adventures and plan your next journey
+                Relive your amazing adventures across India
               </p>
             </div>
 
@@ -455,14 +465,14 @@ export default function Home() {
       )}
 
       {/* Travel Planning Steps */}
-      {/* <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               How It Works
             </h2>
             <p className="text-xl text-gray-600">
-              Start planning your perfect trip in just 3 simple steps
+              Plan your perfect Indian adventure in just 3 simple steps
             </p>
           </div>
 
@@ -471,10 +481,10 @@ export default function Home() {
               <div className="bg-blue-600 text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
                 1
               </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Tell Us Your Preferences</h3>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Choose Your Destination</h3>
               <p className="text-gray-600 leading-relaxed">
-                Share your travel style, budget, interests, and any special requirements. 
-                Our AI learns what makes your perfect trip.
+                Select from India's diverse destinations - from the Himalayas to beaches, 
+                from heritage sites to modern cities.
               </p>
             </div>
 
@@ -482,10 +492,10 @@ export default function Home() {
               <div className="bg-green-600 text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
                 2
               </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Get Personalized Recommendations</h3>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Get Detailed Information</h3>
               <p className="text-gray-600 leading-relaxed">
-                Receive curated destinations, activities, and itineraries tailored specifically 
-                to your preferences and travel goals.
+                Access comprehensive details about places including timings, fees, 
+                best visiting times, and local insights.
               </p>
             </div>
 
@@ -493,41 +503,41 @@ export default function Home() {
               <div className="bg-purple-600 text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
                 3
               </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Book & Enjoy</h3>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Plan & Explore</h3>
               <p className="text-gray-600 leading-relaxed">
-                Book your accommodations, activities, and transportation all in one place. 
-                Then enjoy your perfectly planned adventure!
+                Create your itinerary with our recommendations and embark on 
+                an unforgettable journey across incredible India.
               </p>
             </div>
           </div>
         </div>
-      </section> */}
+      </section>
 
       {/* CTA Section */}
-      {/* <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
+      <section className="py-20 bg-gradient-to-r from-orange-600 to-red-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold text-white mb-6">
-            Ready to Start Your Journey?
+            Ready to Explore India?
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
-            Join thousands of travelers who trust Globetrotter for their adventures
+          <p className="text-xl text-orange-100 mb-8">
+            Join thousands of travelers discovering the beauty of India
           </p>
           <div className="flex gap-4 justify-center flex-col sm:flex-row">
             <Link
               href="/register"
-              className="bg-white text-blue-600 px-8 py-4 rounded-full hover:bg-gray-50 transition-colors font-semibold text-lg"
+              className="bg-white text-orange-600 px-8 py-4 rounded-full hover:bg-gray-50 transition-colors font-semibold text-lg"
             >
               Start Planning Free
             </Link>
             <Link
               href="/login"
-              className="border-2 border-white text-white px-8 py-4 rounded-full hover:bg-white hover:text-blue-600 transition-colors font-semibold text-lg"
+              className="border-2 border-white text-white px-8 py-4 rounded-full hover:bg-white hover:text-orange-600 transition-colors font-semibold text-lg"
             >
               Sign In
             </Link>
           </div>
         </div>
-      </section> */}
+      </section>
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
@@ -536,17 +546,19 @@ export default function Home() {
             <div>
               <h3 className="text-2xl font-bold mb-4">
                 Globe<span className="text-blue-400">trotter</span>
+                <span className="text-orange-400 text-sm ml-2">India</span>
               </h3>
               <p className="text-gray-400">
-                Your personalized travel planning companion for unforgettable adventures.
+                Your personalized travel planning companion for incredible India.
               </p>
             </div>
             <div>
-              <h4 className="text-lg font-semibold mb-4">Platform</h4>
+              <h4 className="text-lg font-semibold mb-4">Destinations</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white">How it works</a></li>
-                <li><a href="#" className="hover:text-white">Features</a></li>
-                <li><a href="#" className="hover:text-white">Pricing</a></li>
+                <li><a href="#" className="hover:text-white">North India</a></li>
+                <li><a href="#" className="hover:text-white">South India</a></li>
+                <li><a href="#" className="hover:text-white">East India</a></li>
+                <li><a href="#" className="hover:text-white">West India</a></li>
               </ul>
             </div>
             <div>
@@ -554,7 +566,7 @@ export default function Home() {
               <ul className="space-y-2 text-gray-400">
                 <li><a href="#" className="hover:text-white">Help Center</a></li>
                 <li><a href="#" className="hover:text-white">Contact Us</a></li>
-                <li><a href="#" className="hover:text-white">Community</a></li>
+                <li><a href="#" className="hover:text-white">Travel Guide</a></li>
               </ul>
             </div>
             <div>
@@ -567,7 +579,7 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 Globetrotter. All rights reserved.</p>
+            <p>&copy; 2025 Globetrotter India. All rights reserved.</p>
           </div>
         </div>
       </footer>
