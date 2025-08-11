@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from 'next/navigation';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface TripPlan {
@@ -71,6 +72,10 @@ const budgetOptions = [
 const genAI = new GoogleGenerativeAI('AIzaSyCYdvcHpwgN4COgqwUKwvZO_gdobr3NRZs');
 
 export default function PlanTrip() {
+  const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [savingTrip, setSavingTrip] = useState(false);
+  
   const [tripPlan, setTripPlan] = useState<TripPlan>({
     startDate: '',
     endDate: '',
@@ -86,6 +91,14 @@ export default function PlanTrip() {
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
 
+  // Check if user is logged in
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
   const handleInputChange = (field: keyof TripPlan, value: any) => {
     setTripPlan(prev => ({
       ...prev,
@@ -100,6 +113,20 @@ export default function PlanTrip() {
         ? prev.interests.filter(i => i !== interest)
         : [...prev.interests, interest]
     }));
+  };
+
+  // Function to fetch place image from Google Places API
+  const fetchPlaceImage = async (placeName: string): Promise<string | null> => {
+    try {
+      const response = await fetch(`/api/places-image?place=${encodeURIComponent(placeName)}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.imageUrl;
+      }
+    } catch (error) {
+      console.error('Error fetching place image:', error);
+    }
+    return null;
   };
 
   const generateSuggestionsWithGemini = async () => {
@@ -142,23 +169,28 @@ export default function PlanTrip() {
       if (jsonMatch) {
         const suggestionsData = JSON.parse(jsonMatch[0]);
         
-        // Add IDs and default images to suggestions
-        const formattedSuggestions = suggestionsData.map((item: any, index: number) => ({
-          ...item,
-          id: index + 1,
-          image: getDefaultImage(item.category || 'general')
-        }));
+        // Add IDs and fetch real images for suggestions
+        const formattedSuggestions = await Promise.all(
+          suggestionsData.map(async (item: any, index: number) => {
+            const imageUrl = await fetchPlaceImage(item.name);
+            return {
+              ...item,
+              id: index + 1,
+              image: imageUrl || getDefaultImage(item.category || 'general')
+            };
+          })
+        );
         
         setSuggestions(formattedSuggestions);
         setShowSuggestions(true);
       } else {
         // Fallback to mock data if parsing fails
-        generateMockSuggestions();
+        await generateMockSuggestions();
       }
     } catch (error) {
       console.error('Error generating suggestions:', error);
       // Fallback to mock data
-      generateMockSuggestions();
+      await generateMockSuggestions();
     } finally {
       setLoading(false);
     }
@@ -178,14 +210,13 @@ export default function PlanTrip() {
     return imageMap[category] || imageMap['general'];
   };
 
-  const generateMockSuggestions = () => {
-    // Fallback mock data
-    const mockSuggestions: Suggestion[] = [
+  const generateMockSuggestions = async () => {
+    // Fallback mock data with real images
+    const mockData: Omit<Suggestion, 'image'>[] = [
       {
         id: 1,
         name: 'Red Fort',
         type: 'place',
-        image: 'https://images.unsplash.com/photo-1597149960419-0d900ac2e3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
         description: 'Historic Mughal fortress and UNESCO World Heritage Site',
         duration: '2-3 hours',
         cost: '₹35 - ₹500',
@@ -199,7 +230,6 @@ export default function PlanTrip() {
         id: 2,
         name: 'Street Food Tour',
         type: 'activity',
-        image: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
         description: 'Explore authentic Delhi street food with local guide',
         duration: '3-4 hours',
         cost: '₹1,500 - ₹2,500',
@@ -208,6 +238,17 @@ export default function PlanTrip() {
         bestTime: 'Evening (5-9 PM)'
       }
     ];
+
+    // Fetch real images for mock data
+    const mockSuggestions: Suggestion[] = await Promise.all(
+      mockData.map(async (item) => {
+        const imageUrl = await fetchPlaceImage(item.name);
+        return {
+          ...item,
+          image: imageUrl || getDefaultImage(item.category || 'general')
+        };
+      })
+    );
 
     setSuggestions(mockSuggestions);
     setShowSuggestions(true);
@@ -253,6 +294,92 @@ export default function PlanTrip() {
 
   const removeFromTravelPlan = (itemId: number) => {
     setTravelPlan(prev => prev.filter(item => item.id !== itemId));
+  };
+
+  const saveTrip = async () => {
+    // Check for token first (more reliable than user state)
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to save your trip');
+      router.push('/login');
+      return;
+    }
+
+    if (!tripPlan.destination || !tripPlan.startDate || !tripPlan.endDate) {
+      alert('Please fill in all required trip details');
+      return;
+    }
+
+    setSavingTrip(true);
+    try {
+
+      // Get destination details
+      const destinationInfo = indianDestinations.find(d => d.id === tripPlan.destination);
+      
+      // Format itinerary by days
+      const itinerary = travelPlan.reduce((acc: any[], item) => {
+        const existingDay = acc.find(d => d.day === item.day);
+        const cleanActivity = {
+          name: item.name || '',
+          type: item.type || '',
+          timeSlot: item.timeSlot || '',
+          duration: item.duration || '',
+          cost: item.cost || '',
+          notes: (item.notes || '').replace(/\n/g, ' ').replace(/\r/g, ' ').trim()
+        };
+        
+        if (existingDay) {
+          existingDay.activities.push(cleanActivity);
+        } else {
+          acc.push({
+            day: item.day,
+            activities: [cleanActivity]
+          });
+        }
+        return acc;
+      }, []);
+
+      const tripData = {
+        destination: destinationInfo?.name || tripPlan.destination,
+        state: destinationInfo?.state || '',
+        startDate: tripPlan.startDate,
+        endDate: tripPlan.endDate,
+        travelers: tripPlan.travelers,
+        budget: tripPlan.budget,
+        interests: tripPlan.interests,
+        image: getDefaultImage('general'),
+        highlights: suggestions.slice(0, 3).map(s => s.name), // Top 3 suggestions as highlights
+        itinerary: itinerary,
+        notes: `Trip planned for ${tripPlan.travelers} travelers with interests in: ${tripPlan.interests.join(', ')}`,
+        aiGeneratedPlan: JSON.stringify(suggestions) // Store AI suggestions for reference
+      };
+
+      console.log('Trip data being sent:', JSON.stringify(tripData, null, 2));
+      console.log('Itinerary structure:', itinerary);
+      console.log('TravelPlan items:', travelPlan);
+
+      const response = await fetch('/api/trips', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(tripData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save trip');
+      }
+
+      const savedTrip = await response.json();
+      alert('Trip saved successfully! Redirecting to your trips...');
+      router.push('/my-trips');
+    } catch (error) {
+      console.error('Error saving trip:', error);
+      alert('Failed to save trip. Please try again.');
+    } finally {
+      setSavingTrip(false);
+    }
   };
 
   const categories = ['All', ...Array.from(new Set(suggestions.map(s => s.category)))];
@@ -313,7 +440,7 @@ export default function PlanTrip() {
                 <select
                   value={tripPlan.destination}
                   onChange={(e) => handleInputChange('destination', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                  className="w-full px-4 py-3 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
                   required
                 >
                   <option value="">Choose your destination</option>
@@ -336,7 +463,7 @@ export default function PlanTrip() {
                     value={tripPlan.startDate}
                     onChange={(e) => handleInputChange('startDate', e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                    className="w-full text-gray-700 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
                     required
                   />
                 </div>
@@ -349,7 +476,7 @@ export default function PlanTrip() {
                     value={tripPlan.endDate}
                     onChange={(e) => handleInputChange('endDate', e.target.value)}
                     min={tripPlan.startDate || new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                    className="w-full text-gray-700 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
                     required
                   />
                 </div>
@@ -373,7 +500,7 @@ export default function PlanTrip() {
                   <select
                     value={tripPlan.travelers}
                     onChange={(e) => handleInputChange('travelers', parseInt(e.target.value))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                    className="w-full text-gray-700 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
                       <option key={num} value={num}>
@@ -389,7 +516,7 @@ export default function PlanTrip() {
                   <select
                     value={tripPlan.budget}
                     onChange={(e) => handleInputChange('budget', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                    className="w-full text-gray-700 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
                   >
                     <option value="">Select budget range</option>
                     {budgetOptions.map((option) => (
@@ -594,8 +721,12 @@ export default function PlanTrip() {
               </div>
               
               <div className="mt-8 text-center">
-                <button className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold">
-                  📋 Generate Complete Itinerary
+                <button 
+                  onClick={saveTrip}
+                  disabled={savingTrip}
+                  className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold disabled:opacity-50"
+                >
+                  {savingTrip ? '� Saving Trip...' : '💾 Save Trip to My Trips'}
                 </button>
               </div>
             </div>

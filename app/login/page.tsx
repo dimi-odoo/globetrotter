@@ -80,8 +80,9 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Store user data in localStorage (or use a state management solution)
+        // Store user data and token in localStorage
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('token', data.token);
         router.push('/');
       } else {
         setError(data.error || 'Login failed');
