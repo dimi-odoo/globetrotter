@@ -451,10 +451,9 @@ export default function Home() {
       <section className="relative h-96 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r "></div>
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          className="absolute inset-0 bg-contain bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('/landing_page.jpg')`,
-            backgroundSize: '100%'
+            backgroundImage: `url('/landing_page.jpg')`
           }}
         ></div>
         <div className="relative z-20 h-full flex items-center justify-center">
