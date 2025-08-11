@@ -46,39 +46,17 @@ export default function Home() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Function to get city image from Unsplash
+  // Function to get city image from Google Places API
   const getCityImage = async (cityName: string): Promise<string> => {
     try {
-      // Use the provided Unsplash API key
-      const UNSPLASH_KEY = "XgrxF1LZXMqtwpUI_ZBcbLxxheu3JRoG7OJSwC9kB34";
+      const response = await fetch(`/api/places-image?place=${encodeURIComponent(cityName)}`);
+      const data = await response.json();
       
-      // Try multiple search queries for better results
-      const searchQueries = [
-        `${cityName} india landmark`,
-        `${cityName} tourism india`,
-        `${cityName} city india`,
-        `${cityName} monument`,
-        cityName
-      ];
-      
-      for (const query of searchQueries) {
-        try {
-          const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&client_id=${UNSPLASH_KEY}&per_page=1`;
-          const response = await fetch(url);
-          
-          if (response.ok) {
-            const data = await response.json();
-            if (data.results && data.results.length > 0) {
-              return data.results[0].urls.regular;
-            }
-          }
-        } catch (error) {
-          console.log(`Failed to fetch image for query: ${query}`);
-          continue;
-        }
+      if (data.imageUrl) {
+        return data.imageUrl;
       }
       
-      // Fallback to a default India image if all searches fail
+      // Fallback to a default India image if no image found
       return `https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`;
     } catch (error) {
       console.error('Error fetching image for', cityName, ':', error);
@@ -86,35 +64,14 @@ export default function Home() {
     }
   };
 
-  // Function to get place image from Unsplash
+  // Function to get place image from Google Places API
   const getPlaceImage = async (placeName: string, cityName?: string): Promise<string> => {
     try {
-      const UNSPLASH_KEY = "XgrxF1LZXMqtwpUI_ZBcbLxxheu3JRoG7OJSwC9kB34";
+      const response = await fetch(`/api/places-image?place=${encodeURIComponent(placeName)}`);
+      const data = await response.json();
       
-      // Try multiple search queries for better results
-      const searchQueries = [
-        placeName,
-        `${placeName} ${cityName || ''} india`.trim(),
-        `${placeName} tourist attraction`,
-        `${placeName} monument`,
-        `${cityName || ''} ${placeName}`.trim()
-      ].filter(query => query.length > 0);
-      
-      for (const query of searchQueries) {
-        try {
-          const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&client_id=${UNSPLASH_KEY}&per_page=1`;
-          const response = await fetch(url);
-          
-          if (response.ok) {
-            const data = await response.json();
-            if (data.results && data.results.length > 0) {
-              return data.results[0].urls.regular;
-            }
-          }
-        } catch (error) {
-          console.log(`Failed to fetch image for query: ${query}`);
-          continue;
-        }
+      if (data.imageUrl) {
+        return data.imageUrl;
       }
       
       // Fallback image for places

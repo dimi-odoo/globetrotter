@@ -39,34 +39,14 @@ export default function CityPage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [user, setUser] = useState<any>(null);
 
-  // Get city image from Unsplash
+  // Get city image from Google Places API
   const getCityImage = async (cityName: string): Promise<string> => {
     try {
-      // Use the provided Unsplash API key
-      const UNSPLASH_KEY = "XgrxF1LZXMqtwpUI_ZBcbLxxheu3JRoG7OJSwC9kB34";
+      const response = await fetch(`/api/places-image?place=${encodeURIComponent(cityName)}`);
+      const data = await response.json();
       
-      const searchQueries = [
-        `${cityName} india landmark`,
-        `${cityName} tourism india`,
-        `${cityName} city india`,
-        cityName
-      ];
-      
-      for (const query of searchQueries) {
-        try {
-          const response = await fetch(
-            `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=${UNSPLASH_KEY}`
-          );
-          
-          if (response.ok) {
-            const data = await response.json();
-            if (data.results && data.results.length > 0) {
-              return data.results[0].urls.regular;
-            }
-          }
-        } catch (error) {
-          continue;
-        }
+      if (data.imageUrl) {
+        return data.imageUrl;
       }
       
       return `https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80`;
@@ -75,38 +55,20 @@ export default function CityPage() {
     }
   };
 
-  // Get place image from Unsplash
+  // Get place image from Google Places API
   const getPlaceImage = async (placeName: string, cityName: string): Promise<string> => {
-    // Use the provided Unsplash API key
-    const UNSPLASH_KEY = "XgrxF1LZXMqtwpUI_ZBcbLxxheu3JRoG7OJSwC9kB34";
-    
-    const queries = [
-      `${placeName} ${cityName} india`,
-      `${placeName} tourist attraction`,
-      `${placeName} monument`,
-      `${cityName} ${placeName}`,
-      placeName
-    ];
-
-    for (const query of queries) {
-      try {
-        const response = await fetch(
-          `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=${UNSPLASH_KEY}`
-        );
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data.results && data.results.length > 0) {
-            return data.results[0].urls.regular;
-          }
-        }
-      } catch (error) {
-        continue;
+    try {
+      const response = await fetch(`/api/places-image?place=${encodeURIComponent(placeName)}`);
+      const data = await response.json();
+      
+      if (data.imageUrl) {
+        return data.imageUrl;
       }
+      
+      return `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`;
+    } catch (error) {
+      return `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`;
     }
-    
-    // Fallback image
-    return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
   };
 
   useEffect(() => {
