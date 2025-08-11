@@ -138,7 +138,7 @@ export default function SearchPage() {
           return result.places.some(place => place.type.toLowerCase().includes(category.toLowerCase()));
         });
       }
-
+      
       // Apply sorting
       switch (sort) {
         case 'rating':
@@ -220,12 +220,12 @@ export default function SearchPage() {
               </Link>
             </div>
             <div className="flex items-center space-x-4">
-              <Link
+                      <Link
                 href="/"
                 className="text-gray-600 hover:text-gray-900 font-medium"
               >
                 ← Back to Home
-              </Link>
+                  </Link>
             </div>
           </div>
         </div>
@@ -242,6 +242,7 @@ export default function SearchPage() {
               Discover amazing places and attractions across India
             </p>
           </div>
+<<<<<<< Updated upstream
 
           {/* Search Form */}
           <form onSubmit={handleSearch} className="max-w-4xl mx-auto">
@@ -301,25 +302,133 @@ export default function SearchPage() {
           </form>
         </div>
       </section>
+=======
+        </div>
+          </div>
+
+      {/* Search Box positioned below hero so it doesn't cover the image */}
+      <div className="relative z-30 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8">
+        <div className="bg-white rounded-xl shadow-xl p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                {/* Search Type Toggle */}
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setSearchType('cities')}
+                className={`flex-1 py-1.5 px-3 rounded-md font-medium transition-colors ${
+                      searchType === 'cities'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                Cities
+                  </button>
+                  <button
+                    onClick={() => setSearchType('activities')}
+                className={`flex-1 py-1.5 px-3 rounded-md font-medium transition-colors ${
+                      searchType === 'activities'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                Activities
+                  </button>
+                </div>
+
+                {/* Search Input */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder={`Search for ${searchType}...`}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSearch(); } }}
+                    className="w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                  <svg className="absolute right-3 top-3 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Filters */}
+          {searchType === 'activities' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="px-4 py-2 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="">All Categories</option>
+                <option value="Adventure">Adventure</option>
+                <option value="Cultural">Cultural</option>
+                <option value="Culinary">Culinary</option>
+                <option value="Sightseeing">Sightseeing</option>
+                <option value="Nature">Nature</option>
+              </select>
+
+              <select
+                value={priceRange}
+                onChange={(e) => setPriceRange(e.target.value)}
+                className="px-4 py-2 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="">Any Price</option>
+                <option value="0-50">Under $50</option>
+                <option value="50-100">$50 - $100</option>
+                <option value="100-200">$100 - $200</option>
+                <option value="200-1000">$200+</option>
+              </select>
+
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-4 py-2 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="relevance">Sort by Relevance</option>
+                <option value="rating">Highest Rated</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+              </select>
+            </div>
+          )}
+
+              {/* Search Button */}
+              <button
+                onClick={handleSearch}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base"
+              >
+            Search
+              </button>
+            </div>
+          </div>
+
+      {/* End Search Header */}
+>>>>>>> Stashed changes
 
       {/* Search Results */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {loading ? (
+        {loading ? (
             <div className="flex justify-center items-center py-20">
               <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-            </div>
-          ) : searchResults.length > 0 ? (
-            <>
+          </div>
+        ) : searchResults.length > 0 ? (
+          <>
               <div className="text-center mb-12">
                 <h2 className="text-3xl font-bold text-gray-900 mb-4">
                   Search Results
-                </h2>
+              </h2>
                 <p className="text-xl text-gray-600">
                   Found {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for "{searchQuery}"
-                </p>
-              </div>
+              </p>
+            </div>
 
+            {searchType === 'cities' ? (
+              <div className="space-y-10">
+                {(searchResults as CityData[]).map((city) => (
+                  <CitySection key={city.city} city={city} />
+                ))}
+              </div>
+            ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {searchResults.map((result) => (
                   <SearchResultCard 
@@ -329,8 +438,9 @@ export default function SearchPage() {
                   />
                 ))}
               </div>
-            </>
-          ) : searchQuery ? (
+            )}
+          </>
+        ) : searchQuery ? (
             <div className="text-center py-20">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
                 No results found
@@ -348,8 +458,8 @@ export default function SearchPage() {
               >
                 Clear Search
               </button>
-            </div>
-          ) : (
+          </div>
+        ) : (
             <div className="text-center py-20">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
                 Search for Places in India
@@ -357,9 +467,9 @@ export default function SearchPage() {
               <p className="text-gray-600">
                 Enter a city name, place, or attraction to get started
               </p>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
       </section>
 
       {/* Footer */}
@@ -377,11 +487,11 @@ export default function SearchPage() {
               <Link href="/search" className="text-gray-400 hover:text-white transition-colors">
                 Search
               </Link>
-            </div>
-          </div>
-        </div>
+                      </div>
+                  </div>
+                </div>
       </footer>
-    </div>
+              </div>
   );
 }
 
@@ -408,7 +518,7 @@ function SearchResultCard({ result, onClick }: SearchResultCardProps) {
         {imageLoading && (
           <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
             <div className="text-gray-400">Loading image...</div>
-          </div>
+                        </div>
         )}
         <Image
           src={result.image}
@@ -421,13 +531,13 @@ function SearchResultCard({ result, onClick }: SearchResultCardProps) {
           <span className="bg-yellow-500 text-black px-2 py-1 rounded-full text-sm font-medium">
             ⭐ {result.city_average_rating}
           </span>
-        </div>
+                        </div>
         <div className="absolute top-4 left-4">
           <span className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium">
             {result.matchType === 'city' ? '🏙️ City' : '📍 Place'}
           </span>
-        </div>
-      </div>
+                        </div>
+                      </div>
       
       <div className="p-6">
         <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -466,27 +576,87 @@ function SearchResultCard({ result, onClick }: SearchResultCardProps) {
               <div className="flex justify-between">
                 <span className="text-gray-500">Weekly Off:</span>
                 <span className="font-medium">{result.matchedPlace.weekly_off}</span>
-              </div>
-            </>
-          )}
+                      </div>
+                    </>
+                  )}
           
           {result.matchType === 'city' && (
             <div className="flex justify-between">
               <span className="text-gray-500">Attractions:</span>
               <span className="font-medium">{result.places.length} places</span>
-            </div>
+                      </div>
           )}
-        </div>
-        
+                    </div>
+                    
         <div className="mt-4 pt-4 border-t border-gray-200">
           <button className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center">
             {result.matchType === 'city' ? 'Explore City' : 'View Details'}
             <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-          </button>
-        </div>
-      </div>
+                      </button>
+                    </div>
+                  </div>
     </div>
+  );
+}
+
+function CitySection({ city }: { city: CityData }) {
+  const slug = city.city.toLowerCase().replace(/\s+/g, '-');
+  const [placeImages, setPlaceImages] = useState<Record<number, string>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    const fallback = 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=600&h=400&fit=crop';
+    const loadImages = async () => {
+      try {
+        const entries = await Promise.all(
+          city.places.map(async (place, idx) => {
+            try {
+              const res = await fetch(`/api/places-image?place=${encodeURIComponent(`${place.place_name} ${city.city}`)}`);
+              const data = await res.json();
+              return [idx, data.imageUrl || fallback] as const;
+            } catch {
+              return [idx, fallback] as const;
+            }
+          })
+        );
+        if (!cancelled) {
+          setPlaceImages(Object.fromEntries(entries));
+        }
+      } catch {
+        // ignore
+      }
+    };
+    loadImages();
+    return () => { cancelled = true; };
+  }, [city]);
+  return (
+    <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div>
+          <h3 className="text-2xl font-semibold text-gray-900">{city.city}</h3>
+          <p className="text-gray-600">{city.district}</p>
+        </div>
+        <Link href={`/city/${slug}`} className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+          See all attractions
+        </Link>
+      </div>
+
+      <h4 className="text-sm font-semibold text-gray-700 mb-3">Famous locations in {city.city}</h4>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {city.places.map((place, idx) => (
+          <div key={idx} className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+            <div className="relative h-14 w-20 overflow-hidden rounded-md bg-gray-200 flex-shrink-0">
+              <Image src={placeImages[idx] || 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=600&h=400&fit=crop'} alt={place.place_name} fill className="object-cover" />
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="h-5 w-5 text-blue-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/></svg>
+              <span className="text-gray-800">{place.place_name}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
