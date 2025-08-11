@@ -568,7 +568,7 @@ export default function Home() {
                 type="submit"
                 className="bg-blue-600 text-white px-12 py-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg shadow-lg"
               >
-                🔍 Explore India
+                Search
               </button>
             </div>
           </form>
