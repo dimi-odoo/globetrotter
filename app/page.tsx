@@ -186,10 +186,16 @@ export default function Home() {
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-gray-900">
                 Globe<span className="text-blue-600">trotter</span>
-                <span className="text-sm text-orange-500 ml-2">India</span>
+                {/* <span className="text-sm text-orange-500 ml-2">India</span> */}
               </h1>
             </div>
             <div className="flex items-center space-x-4">
+              <Link
+                href="/plan-trip"
+                className="text-gray-600 hover:text-gray-900 font-medium"
+              >
+                Plan Trip
+              </Link>
               {user ? (
                 <div className="flex items-center space-x-4">
                   <span className="text-gray-600">Welcome, {user.firstName}!</span>
@@ -233,10 +239,10 @@ export default function Home() {
         <div className="relative z-20 h-full flex items-center justify-center">
           <div className="text-center text-white">
             <h1 className="text-5xl md:text-6xl font-bold mb-4">
-              Discover Incredible India
+              Discover Incredible Places
             </h1>
             <p className="text-xl md:text-2xl opacity-90">
-              Explore the diverse beauty and rich heritage of India
+              Explore the diverse beauty and rich heritage of Earth
             </p>
           </div>
         </div>
@@ -258,7 +264,7 @@ export default function Home() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search cities, states, destinations..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                  className="w-full px-4 py-3 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
                 />
               </div>
 
@@ -271,7 +277,7 @@ export default function Home() {
                   id="filter"
                   value={filterCategory}
                   onChange={(e) => setFilterCategory(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">All Categories</option>
                   <option value="heritage">Heritage</option>
@@ -292,7 +298,7 @@ export default function Home() {
                   id="sortBy"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">Relevance</option>
                   <option value="rating">Highest Rated</option>
@@ -465,7 +471,7 @@ export default function Home() {
       )}
 
       {/* Travel Planning Steps */}
-      <section className="py-20 bg-gray-50">
+      {/* <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -511,10 +517,10 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-orange-600 to-red-600">
+      {/* <section className="py-20 bg-gradient-to-r from-orange-600 to-red-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold text-white mb-6">
             Ready to Explore India?
@@ -537,7 +543,7 @@ export default function Home() {
             </Link>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
@@ -546,7 +552,7 @@ export default function Home() {
             <div>
               <h3 className="text-2xl font-bold mb-4">
                 Globe<span className="text-blue-400">trotter</span>
-                <span className="text-orange-400 text-sm ml-2">India</span>
+                {/* <span className="text-orange-400 text-sm ml-2">India</span> */}
               </h3>
               <p className="text-gray-400">
                 Your personalized travel planning companion for incredible India.
