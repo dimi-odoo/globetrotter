@@ -507,7 +507,7 @@ function SearchResultCard({ result, onClick }: SearchResultCardProps) {
                       </button>
                     </div>
                   </div>
-    </div>
+                </div>
   );
 }
 
@@ -551,7 +551,7 @@ function CitySection({ city }: { city: CityData }) {
         <Link href={`/city/${slug}`} className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
           See all attractions
         </Link>
-      </div>
+              </div>
 
       <h4 className="text-sm font-semibold text-gray-700 mb-3">Famous locations in {city.city}</h4>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -563,10 +563,10 @@ function CitySection({ city }: { city: CityData }) {
             <div className="flex items-center gap-2">
               <svg className="h-5 w-5 text-blue-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/></svg>
               <span className="text-gray-800">{place.place_name}</span>
-            </div>
           </div>
+        </div>
         ))}
-      </div>
+    </div>
     </section>
   );
 }
