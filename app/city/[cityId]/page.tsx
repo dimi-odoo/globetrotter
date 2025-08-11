@@ -42,6 +42,9 @@ export default function CityPage() {
   // Get city image from Unsplash
   const getCityImage = async (cityName: string): Promise<string> => {
     try {
+      // Use the provided Unsplash API key
+      const UNSPLASH_KEY = "XgrxF1LZXMqtwpUI_ZBcbLxxheu3JRoG7OJSwC9kB34";
+      
       const searchQueries = [
         `${cityName} india landmark`,
         `${cityName} tourism india`,
@@ -52,7 +55,7 @@ export default function CityPage() {
       for (const query of searchQueries) {
         try {
           const response = await fetch(
-            `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=8S0JjGVzS_QPdGnVNRzZHnGpNJ3J8X5s1qqRYgfXJ-I`
+            `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=${UNSPLASH_KEY}`
           );
           
           if (response.ok) {
@@ -74,6 +77,9 @@ export default function CityPage() {
 
   // Get place image from Unsplash
   const getPlaceImage = async (placeName: string, cityName: string): Promise<string> => {
+    // Use the provided Unsplash API key
+    const UNSPLASH_KEY = "XgrxF1LZXMqtwpUI_ZBcbLxxheu3JRoG7OJSwC9kB34";
+    
     const queries = [
       `${placeName} ${cityName} india`,
       `${placeName} tourist attraction`,
@@ -85,7 +91,7 @@ export default function CityPage() {
     for (const query of queries) {
       try {
         const response = await fetch(
-          `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=8S0JjGVzS_QPdGnVNRzZHnGpNJ3J8X5s1qqRYgfXJ-I`
+          `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=${UNSPLASH_KEY}`
         );
         
         if (response.ok) {

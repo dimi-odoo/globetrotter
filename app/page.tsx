@@ -49,6 +49,9 @@ export default function Home() {
   // Function to get city image from Unsplash
   const getCityImage = async (cityName: string): Promise<string> => {
     try {
+      // Use the provided Unsplash API key
+      const UNSPLASH_KEY = "XgrxF1LZXMqtwpUI_ZBcbLxxheu3JRoG7OJSwC9kB34";
+      
       // Try multiple search queries for better results
       const searchQueries = [
         `${cityName} india landmark`,
@@ -60,9 +63,8 @@ export default function Home() {
       
       for (const query of searchQueries) {
         try {
-          const response = await fetch(
-            `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=8S0JjGVzS_QPdGnVNRzZHnGpNJ3J8X5s1qqRYgfXJ-I`
-          );
+          const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&client_id=${UNSPLASH_KEY}&per_page=1`;
+          const response = await fetch(url);
           
           if (response.ok) {
             const data = await response.json();
@@ -81,6 +83,45 @@ export default function Home() {
     } catch (error) {
       console.error('Error fetching image for', cityName, ':', error);
       return `https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`;
+    }
+  };
+
+  // Function to get place image from Unsplash
+  const getPlaceImage = async (placeName: string, cityName?: string): Promise<string> => {
+    try {
+      const UNSPLASH_KEY = "XgrxF1LZXMqtwpUI_ZBcbLxxheu3JRoG7OJSwC9kB34";
+      
+      // Try multiple search queries for better results
+      const searchQueries = [
+        placeName,
+        `${placeName} ${cityName || ''} india`.trim(),
+        `${placeName} tourist attraction`,
+        `${placeName} monument`,
+        `${cityName || ''} ${placeName}`.trim()
+      ].filter(query => query.length > 0);
+      
+      for (const query of searchQueries) {
+        try {
+          const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&client_id=${UNSPLASH_KEY}&per_page=1`;
+          const response = await fetch(url);
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.results && data.results.length > 0) {
+              return data.results[0].urls.regular;
+            }
+          }
+        } catch (error) {
+          console.log(`Failed to fetch image for query: ${query}`);
+          continue;
+        }
+      }
+      
+      // Fallback image for places
+      return `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`;
+    } catch (error) {
+      console.error('Error fetching image for', placeName, ':', error);
+      return `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`;
     }
   };
 
@@ -178,7 +219,7 @@ export default function Home() {
     } catch (error) {
       console.error('Error fetching cities:', error);
       
-      // Create fallback mock data based on API structure
+      // Create fallback mock data based on API structure with real images
       const fallbackCities: CityWithImage[] = [
         {
           city: 'Agra',
@@ -189,7 +230,7 @@ export default function Home() {
             { place_name: 'Agra Fort', type: 'Fort', rating: 4.6, significance: 'Historical', weekly_off: 'None', entrance_fee: 30, dslr_allowed: 'Yes' },
             { place_name: 'Mehtab Bagh', type: 'Garden', rating: 4.4, significance: 'Historical', weekly_off: 'None', entrance_fee: 25, dslr_allowed: 'Yes' }
           ],
-          image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          image: await getCityImage('Agra'),
           id: 'agra',
           state: 'Uttar Pradesh',
           description: 'Home to the magnificent Taj Mahal and rich Mughal heritage.',
@@ -206,7 +247,7 @@ export default function Home() {
             { place_name: 'Amber Fort', type: 'Fort', rating: 4.7, significance: 'Historical', weekly_off: 'None', entrance_fee: 100, dslr_allowed: 'Yes' },
             { place_name: 'City Palace', type: 'Palace', rating: 4.6, significance: 'Historical', weekly_off: 'None', entrance_fee: 75, dslr_allowed: 'Yes' }
           ],
-          image: 'https://images.unsplash.com/photo-1599661046827-dacde6976549?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          image: await getCityImage('Jaipur'),
           id: 'jaipur',
           state: 'Rajasthan',
           description: 'The Pink City known for its royal palaces and vibrant culture.',
@@ -223,13 +264,47 @@ export default function Home() {
             { place_name: 'Basilica of Bom Jesus', type: 'Church', rating: 4.5, significance: 'Religious', weekly_off: 'None', entrance_fee: 0, dslr_allowed: 'Yes' },
             { place_name: 'Fort Aguada', type: 'Fort', rating: 4.2, significance: 'Historical', weekly_off: 'None', entrance_fee: 25, dslr_allowed: 'Yes' }
           ],
-          image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          image: await getCityImage('Goa'),
           id: 'goa',
           state: 'Goa',
           description: 'Beautiful beaches, Portuguese heritage, and vibrant nightlife.',
           attractions: ['Baga Beach', 'Basilica of Bom Jesus', 'Fort Aguada'],
           popular: true,
           visitors: '23M+'
+        },
+        {
+          city: 'Mumbai',
+          city_average_rating: 4.4,
+          best_time_to_visit: 'November to February',
+          places: [
+            { place_name: 'Gateway of India', type: 'Monument', rating: 4.3, significance: 'Historical', weekly_off: 'None', entrance_fee: 0, dslr_allowed: 'Yes' },
+            { place_name: 'Marine Drive', type: 'Promenade', rating: 4.4, significance: 'Tourist', weekly_off: 'None', entrance_fee: 0, dslr_allowed: 'Yes' },
+            { place_name: 'Elephanta Caves', type: 'Caves', rating: 4.2, significance: 'Historical', weekly_off: 'Monday', entrance_fee: 40, dslr_allowed: 'Yes' }
+          ],
+          image: await getCityImage('Mumbai'),
+          id: 'mumbai',
+          state: 'Maharashtra',
+          description: 'The financial capital of India, known as the City of Dreams.',
+          attractions: ['Gateway of India', 'Marine Drive', 'Elephanta Caves'],
+          popular: true,
+          visitors: '22M+'
+        },
+        {
+          city: 'Delhi',
+          city_average_rating: 4.3,
+          best_time_to_visit: 'October to March',
+          places: [
+            { place_name: 'Red Fort', type: 'Fort', rating: 4.4, significance: 'Historical', weekly_off: 'Monday', entrance_fee: 35, dslr_allowed: 'Yes' },
+            { place_name: 'India Gate', type: 'Monument', rating: 4.3, significance: 'Historical', weekly_off: 'None', entrance_fee: 0, dslr_allowed: 'Yes' },
+            { place_name: 'Qutub Minar', type: 'Monument', rating: 4.2, significance: 'Historical', weekly_off: 'None', entrance_fee: 30, dslr_allowed: 'Yes' }
+          ],
+          image: await getCityImage('Delhi'),
+          id: 'delhi',
+          state: 'Delhi',
+          description: 'The capital city with rich history and modern attractions.',
+          attractions: ['Red Fort', 'India Gate', 'Qutub Minar'],
+          popular: true,
+          visitors: '21M+'
         }
       ];
       
