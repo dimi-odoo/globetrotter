@@ -102,6 +102,11 @@ export default function LoginPage() {
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('token', data.token);
         router.push('/');
+      } else if (response.status === 403 && data.needsVerification) {
+        // User needs email verification
+        setError('');
+        setSuccess('Please verify your email to continue');
+        router.push(`/verify-otp?email=${encodeURIComponent(data.email)}`);
       } else {
         setError(data.error || 'Login failed');
       }

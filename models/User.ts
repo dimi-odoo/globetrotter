@@ -19,6 +19,9 @@ export interface IUser {
   description: string;
   profilePhoto: string;
   isActive?: boolean;
+  isVerified?: boolean;
+  verificationOTP?: string;
+  otpExpiry?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -103,6 +106,18 @@ const userSchema = new mongoose.Schema<IUser>({
   isActive: {
     type: Boolean,
     default: true
+  },
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+  verificationOTP: {
+    type: String,
+    required: false
+  },
+  otpExpiry: {
+    type: Date,
+    required: false
   }
 }, {
   timestamps: true,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
+import { generateOTP, sendOTPEmail } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,7 +37,11 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create new user
+    // Generate OTP and expiry
+    const otp = generateOTP();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+
+    // Create new user (unverified)
     const user = new User({
       username,
       email,
@@ -47,16 +52,32 @@ export async function POST(request: NextRequest) {
       city,
       country,
       description,
-      profilePhoto
+      profilePhoto,
+      isVerified: false,
+      verificationOTP: otp,
+      otpExpiry: otpExpiry
     });
 
     await user.save();
 
-    // Remove password from response
-    const { password: _, ...userResponse } = user.toObject();
+    // Send OTP email
+    const emailSent = await sendOTPEmail(email, otp, firstName);
+    
+    if (!emailSent) {
+      // If email fails, delete the user and return error
+      await User.findByIdAndDelete(user._id);
+      return NextResponse.json(
+        { error: 'Failed to send verification email. Please try again.' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
-      { message: 'User registered successfully', user: userResponse },
+      { 
+        message: 'Registration successful! Please check your email for the verification OTP.',
+        email: email,
+        requiresVerification: true
+      },
       { status: 201 }
     );
   } catch (error: any) {

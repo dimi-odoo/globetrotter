@@ -91,13 +91,22 @@ export default function PlanTrip() {
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
 
-  // Check if user is logged in
+  // Check if user is logged in and verified
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) {
-      setUser(JSON.parse(userData));
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+      
+      // Check if user is verified
+      if (!parsedUser.isVerified) {
+        router.push(`/verify-otp?email=${encodeURIComponent(parsedUser.email)}`);
+        return;
+      }
+    } else {
+      router.push('/login');
     }
-  }, []);
+  }, [router]);
 
   const handleInputChange = (field: keyof TripPlan, value: any) => {
     setTripPlan(prev => ({

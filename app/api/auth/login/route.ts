@@ -42,6 +42,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if user is verified
+    if (!user.isVerified) {
+      return NextResponse.json(
+        { 
+          error: 'Please verify your email before logging in',
+          needsVerification: true,
+          email: user.email
+        },
+        { status: 403 }
+      );
+    }
+
     // Generate JWT token
     const token = jwt.sign(
       { 

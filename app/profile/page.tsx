@@ -153,7 +153,31 @@ export default function ProfileDashboardPage() {
                         <svg className="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="10" r="4"/><path d="M18 20a6 6 0 00-12 0"/></svg>
                         Member since {memberSince}
                       </span>
-          </div>
+                      {/* Verification Status */}
+                      {user && (
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                          user.isVerified 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {user.isVerified ? (
+                            <>
+                              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                              </svg>
+                              Verified
+                            </>
+                          ) : (
+                            <>
+                              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                              </svg>
+                              Not Verified
+                            </>
+                          )}
+                        </span>
+                      )}
+                    </div>
                     <p className="mt-2 text-sm text-slate-700">{bio}</p>
           </div>
         </div>
