@@ -45,6 +45,37 @@ export default function SearchPage() {
   const [searchType, setSearchType] = useState<'cities' | 'activities'>('cities');
   const [priceRange, setPriceRange] = useState('');
 
+  // Fallback dataset if /api/cities is missing
+  const FALLBACK_CITIES: CityData[] = [
+    {
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      district: 'Mumbai',
+      famous_foods: ['Vada Pav', 'Pav Bhaji'],
+      best_time_to_visit: 'October to March',
+      city_average_rating: 4.48,
+      places: [
+        { place_name: 'Gateway of India', type: 'Monument', significance: 'Historical', entrance_fee: 0, weekly_off: 'None' },
+        { place_name: 'Marine Drive', type: 'Promenade', significance: 'Tourist', entrance_fee: 0, weekly_off: 'None' },
+        { place_name: 'Sanjay Gandhi National Park', type: 'Park', significance: 'Nature', entrance_fee: 85, weekly_off: 'None' },
+        { place_name: 'Elephanta Caves', type: 'Caves', significance: 'Historical', entrance_fee: 40, weekly_off: 'Monday' },
+      ],
+    },
+    {
+      city: 'Delhi',
+      state: 'Delhi',
+      district: 'New Delhi',
+      famous_foods: ['Chole Bhature', 'Paratha'],
+      best_time_to_visit: 'October to March',
+      city_average_rating: 4.35,
+      places: [
+        { place_name: 'Red Fort', type: 'Fort', significance: 'Historical', entrance_fee: 35, weekly_off: 'Monday' },
+        { place_name: 'India Gate', type: 'Monument', significance: 'Historical', entrance_fee: 0, weekly_off: 'None' },
+        { place_name: 'Qutub Minar', type: 'Monument', significance: 'Historical', entrance_fee: 30, weekly_off: 'None' },
+      ],
+    },
+  ];
+
   // Function to get image from Google Places API via our API route
   const getImage = async (placeName: string): Promise<string> => {
     try {
@@ -71,10 +102,12 @@ export default function SearchPage() {
         throw new Error('Failed to fetch cities');
       }
       const data = await response.json();
-      return data;
+      // If API returns nothing, fallback
+      return Array.isArray(data) && data.length > 0 ? data : FALLBACK_CITIES;
     } catch (error) {
       console.error('Error fetching cities:', error);
-      return [];
+      // Use fallback when API is missing/unreachable
+      return FALLBACK_CITIES;
     }
   };
 
@@ -246,19 +279,16 @@ export default function SearchPage() {
       </nav>
 
       {/* Search Header */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-600 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Search India
-            </h1>
-            <p className="text-xl text-blue-100">
-              Discover amazing places and attractions across India
-            </p>
+      <section className="relative bg-cover bg-center bg-no-repeat min-h-[60vh]" style={{ backgroundImage: 'url("/search_loc.png")' }}>
+        <div className="absolute inset-0 bg-black/35"></div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col">
+          <div className="text-center pt-40 pr-15">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Search India</h1>
+            <p className="text-xl text-blue-100 font-semibold">Discover amazing places and attractions across India</p>
           </div>
 
-          {/* Search Form */}
-          <form onSubmit={handleSearch} className="max-w-4xl mx-auto">
+          {/* Search Form - anchored near the bottom */}
+          <form onSubmit={handleSearch} className="max-w-4xl mx-auto mt-auto mb-8 pt-24">
             <div className="bg-white rounded-2xl p-6 shadow-xl">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {/* Search Input */}
@@ -308,7 +338,7 @@ export default function SearchPage() {
                   disabled={loading}
                   className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50"
                 >
-                  {loading ? 'Searching...' : '🔍 Search'}
+                  {loading ? 'Searching...' : 'Search'}
                 </button>
               </div>
             </div>
@@ -325,16 +355,8 @@ export default function SearchPage() {
           </div>
         ) : searchResults.length > 0 ? (
           <>
-              <div className="text-center mb-12">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                  Search Results
-              </h2>
-                <p className="text-xl text-gray-600">
-                  Found {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for "{searchQuery}"
-              </p>
-            </div>
-
-            {searchResults.length > 0 && (
+            {searchResults.every(result => result.matchType === 'city') ? (
+              // For city results, show directly without header
               <div className="space-y-10">
                 {searchResults.map((result) => (
                   result.matchType === 'city' ? (
@@ -348,6 +370,31 @@ export default function SearchPage() {
                   )
                 ))}
               </div>
+            ) : (
+              // For mixed results, show header
+              <>
+                <div className="text-center mb-12">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                    Search Results
+                  </h2>
+                  <p className="text-xl text-gray-600">
+                    Found {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for "{searchQuery}"
+                  </p>
+                </div>
+                <div className="space-y-10">
+                  {searchResults.map((result) => (
+                    result.matchType === 'city' ? (
+                      <CitySection key={result.id} city={result} />
+                    ) : (
+                      <SearchResultCard 
+                        key={result.id} 
+                        result={result} 
+                        onClick={() => handleResultClick(result)}
+                      />
+                    )
+                  ))}
+                </div>
+              </>
             )}
           </>
         ) : searchQuery ? (
@@ -421,7 +468,7 @@ function SearchResultCard({ result, onClick }: SearchResultCardProps) {
 
   return (
     <div 
-      className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+      className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-00 cursor-pointer"
       onClick={onClick}
     >
       <div className="relative h-48">
