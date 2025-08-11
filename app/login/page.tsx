@@ -93,95 +93,114 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to continue your journey</p>
+    <div className="min-h-screen h-screen w-screen flex bg-white">
+      {/* Left Side: Image and Welcome Text */}
+      <div className="hidden md:flex flex-col justify-start items-start bg-gray-100 relative w-7/10 h-full">
+        <Image
+          src="/login_page.png"
+          alt="Start your journey"
+          fill
+          className="object-cover absolute inset-0 z-0"
+        />
+        <div className="relative z-10 flex flex-col items-start justify-start h-full w-full p-16">
+          <h1 className="text-5xl font-extrabold text-white mb-4 drop-shadow-lg mt-10">Start Your Journey</h1>
+          <p className="text-2xl text-white/90 drop-shadow">Plan, explore, and create unforgettable travel experiences</p>
         </div>
-
-        {/* User Photo Display */}
-        {userPhoto && (
-          <div className="flex justify-center mb-6">
-            <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-blue-100">
-              <Image
-                src={userPhoto}
-                alt="User profile"
-                fill
-                className="object-cover"
-                onError={() => setUserPhoto('')}
+      </div>
+      {/* Right Side: Login Form */}
+      <div className="w-full md:w-1/2 h-full bg-white/80 backdrop-blur-lg flex flex-col justify-center p-16 mb-10">
+        <div className="max-w-md w-full mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back to GlobeTrotter</h2>
+            <p className="text-gray-700">Sign in to continue your journey</p>
+          </div>
+          {/* User Photo Display */}
+          {userPhoto && (
+            <div className="flex justify-center mb-8">
+              <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-blue-200 shadow-lg">
+                <Image
+                  src={userPhoto}
+                  alt="User profile"
+                  fill
+                  className="object-cover"
+                  onError={() => setUserPhoto('')}
+                />
+              </div>
+            </div>
+          )}
+          {error && (
+            <div className="mb-6 p-4 bg-red-100/70 border border-red-300 rounded-lg">
+              <p className="text-red-700 text-sm font-medium">{error}</p>
+            </div>
+          )}
+          {success && (
+            <div className="mb-6 p-4 bg-green-100/70 border border-green-300 rounded-lg">
+              <p className="text-green-700 text-sm font-medium">{success}</p>
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-2">
+                Username or Email
+              </label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                required
+                value={formData.username}
+                onChange={handleInputChange}
+                className="w-full px-5 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 bg-white/80 placeholder-gray-400 hover:border-blue-300 shadow-sm"
+                placeholder="Enter your username or email"
               />
             </div>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
+                  Password
+                </label>
+                <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-800 font-semibold">
+                  Forgot password?
+                </Link>
+              </div>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                required
+                value={formData.password}
+                onChange={handleInputChange}
+                className="w-full px-5 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 bg-white/80 placeholder-gray-400 hover:border-blue-300 shadow-sm"
+                placeholder="Enter your password"
+              />
+            </div>
+            <div className="flex items-center mb-2">
+              <input
+                id="remember"
+                name="remember"
+                type="checkbox"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">
+                Remember me
+              </label>
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 px-4 rounded-xl font-bold text-lg shadow-md hover:from-blue-600 hover:to-indigo-600 focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            >
+              {loading ? 'Signing In...' : 'Sign In'}
+            </button>
+          </form>
+            <div className="text-center mt-4">
+            <p className="text-gray-700">
+              Don't have an account?{' '}
+              <Link href="/register" className="text-blue-600 hover:text-blue-800 font-semibold">
+                Create one
+              </Link>
+            </p>
           </div>
-        )}
-
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600 text-sm">{error}</p>
-          </div>
-        )}
-
-        {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-green-600 text-sm">{success}</p>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-              Username or Email
-            </label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              required
-              value={formData.username}
-              onChange={handleInputChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              placeholder="Enter your username or email"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              required
-              value={formData.password}
-              onChange={handleInputChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              placeholder="Enter your password"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {loading ? 'Signing In...' : 'Sign In'}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
-            Don't have an account?{' '}
-            <Link href="/register" className="text-blue-600 hover:text-blue-700 font-medium">
-              Create one
-            </Link>
-          </p>
-        </div>
-
-        <div className="mt-4 text-center">
-          <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700">
-            Forgot your password?
-          </Link>
         </div>
       </div>
     </div>
