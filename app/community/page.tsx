@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface User {
   _id: string;
@@ -134,17 +135,26 @@ export default function CommunityPage() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Like response:', data); // Debug log
         setPosts(posts.map(post => {
           if (post._id === postId) {
+            const currentLikes = post.likes || [];
+            const newLikes = data.isLiked 
+              ? [...currentLikes, user!._id]
+              : currentLikes.filter(id => id !== user!._id);
+            
+            console.log('Updating likes:', { currentLikes, newLikes, isLiked: data.isLiked }); // Debug log
+            
             return {
               ...post,
-              likes: data.isLiked 
-                ? [...post.likes, user!._id]
-                : post.likes.filter(id => id !== user!._id)
+              likes: newLikes
             };
           }
           return post;
         }));
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to toggle like:', response.status, errorData);
       }
     } catch (error) {
       console.error('Error toggling like:', error);
@@ -259,241 +269,342 @@ export default function CommunityPage() {
         </div>
       </nav>
 
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Community</h1>
-              <p className="text-gray-600 mt-1">Share your travel experiences and connect with fellow travelers</p>
-            </div>
-            <button
-              onClick={() => setShowCreatePost(true)}
-              className="bg-blue-600  text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Create Post
-            </button>
+      {/* Hero Section */}
+      <section className="relative h-[500px] overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-black/30 z-10"></div>
+        <Image
+          src="/communicty.jpg"
+          alt="Travel Community"
+          fill
+          className="object-cover object-center"
+          priority
+          sizes="100vw"
+        />
+        <div className="relative z-30 h-full flex items-center justify-center">
+          <div className="text-center text-white px-4">
+            <h1 className="text-5xl md:text-6xl font-bold mb-4 drop-shadow-lg">
+              Travel Community
+            </h1>
+            <p className="text-xl md:text-2xl opacity-90 drop-shadow-md max-w-3xl mx-auto">
+              Share your adventures and connect with fellow travelers
+            </p>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Create Post Modal */}
-        {showCreatePost && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4">
-              <h2 className="text-2xl font-bold  text-gray-700 mb-4">Create New Post</h2>
-              <form onSubmit={createPost}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Title *
-                  </label>
-                  <input
-                    type="text"
-                    value={newPost.title}
-                    onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-                    className="w-full text-gray-700 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter post title..."
-                    maxLength={200}
-                    required
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Content *
-                  </label>
-                  <textarea
-                    value={newPost.content}
-                    onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-                    className="w-full text-gray-700 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows={6}
-                    placeholder="Share your travel story, tips, or ask questions..."
-                    maxLength={2000}
-                    required
-                  />
-                </div>
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tags (optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={newPost.tags}
-                    onChange={(e) => setNewPost({ ...newPost, tags: e.target.value })}
-                    className="w-full text-gray-700 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="travel, tips, backpacking (comma separated)"
-                  />
-                </div>
-                <div className="flex justify-end space-x-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowCreatePost(false)}
-                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                  >
-                    Post
-                  </button>
-                </div>
-              </form>
+      {/* Community Header */}
+      <section className="bg-white shadow-lg -mt-16 relative z-30 mx-4 sm:mx-8 lg:mx-16 rounded-2xl">
+        <div className="p-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">Community</h2>
+                <p className="text-gray-600">Share your travel experiences and connect with fellow travelers</p>
+              </div>
+              <button
+                onClick={() => setShowCreatePost(true)}
+                className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-lg"
+              >
+                Create Post
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      </section>
 
-        {/* Posts List */}
-        <div className="space-y-6">
-          {posts.map((post) => (
-            <div key={post._id} className="bg-white rounded-lg shadow-sm border p-6">
-              {/* Post Header */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
-                    {post.author.username.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="ml-3">
-                    <p className="font-medium text-gray-900">{post.author.username}</p>
-                    <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Post Content */}
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">{post.title}</h3>
-              <p className="text-gray-700 mb-4 whitespace-pre-wrap">{post.content}</p>
-
-              {/* Tags */}
-              {post.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {post.tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Post Actions */}
-              <div className="flex items-center space-x-6 py-3 border-t border-gray-100">
-                <button
-                  onClick={() => toggleLike(post._id)}
-                  className={`flex items-center space-x-2 text-sm ${
-                    post.likes.includes(user!._id)
-                      ? 'text-red-600'
-                      : 'text-gray-600 hover:text-red-600'
-                  }`}
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                  </svg>
-                  <span>{post.likes.length} likes</span>
-                </button>
-                <span className="text-sm text-gray-600">
-                  {post.comments.length} comments
-                </span>
-              </div>
-
-              {/* Comments Section */}
-              <div className="mt-4 space-y-3">
-                {post.comments.map((comment) => (
-                  <div key={comment._id} className="flex space-x-3">
-                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-sm font-semibold">
-                      {comment.user.username.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1">
-                      <div className="bg-gray-50 rounded-lg px-3 py-2">
-                        <p className="font-medium text-sm text-gray-900">{comment.user.username}</p>
-                        <p className="text-gray-700">{comment.content}</p>
+             {/* Posts Section */}
+       <section className="py-20 bg-gray-50">
+         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Posts List */}
+          <div className="space-y-8">
+            {posts.map((post) => (
+              <div key={post._id} className="bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border-2 border-gray-200 overflow-hidden">
+                {/* Post Header */}
+                <div className="p-6 border-b border-gray-100">
+                  <div className="flex items-center justify-between mb-4">
+                                         <div className="flex items-center">
+                       <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-semibold text-lg">
+                         {post.author.username.charAt(0).toUpperCase()}
+                       </div>
+                      <div className="ml-4">
+                        <p className="font-semibold text-gray-900 text-lg">{post.author.username}</p>
+                        <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">{formatDate(comment.createdAt)}</p>
                     </div>
                   </div>
-                ))}
 
-                {/* Add Comment */}
-                <div className="flex space-x-3 mt-4">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                    {user?.username.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="flex-1 flex space-x-2">
-                    <input
-                      type="text"
-                      value={commentInputs[post._id] || ''}
-                      onChange={(e) => setCommentInputs({ ...commentInputs, [post._id]: e.target.value })}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Write a comment..."
-                      onKeyPress={(e) => e.key === 'Enter' && addComment(post._id)}
-                    />
+                  {/* Post Content */}
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">{post.title}</h3>
+                  <p className="text-gray-700 text-lg leading-relaxed whitespace-pre-wrap">{post.content}</p>
+
+                  {/* Tags */}
+                  {post.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      {post.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full font-medium"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Post Actions */}
+                <div className="px-6 py-4 bg-gray-50">
+                  <div className="flex items-center space-x-8">
                     <button
-                      onClick={() => addComment(post._id)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                      onClick={() => toggleLike(post._id)}
+                      className={`flex items-center space-x-2 text-sm font-medium transition-colors ${
+                        (post.likes || []).includes(user!._id)
+                          ? 'text-red-600'
+                          : 'text-gray-600 hover:text-red-600'
+                      }`}
                     >
-                      Post
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                      </svg>
+                      <span>{(post.likes || []).length} likes</span>
                     </button>
+                    <span className="text-sm text-gray-600 font-medium">
+                      {post.comments.length} comments
+                    </span>
                   </div>
                 </div>
+
+                                 {/* Comments Section */}
+                 <div className="bg-gray-50 border-t-2 border-gray-200">
+                   {/* Comments Header */}
+                   <div className="px-6 py-4 border-b-2 border-gray-300 bg-white rounded-t-lg">
+                     <div className="flex items-center justify-between">
+                       <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                         <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                         </svg>
+                         Comments ({post.comments.length})
+                       </h4>
+                       <span className="text-sm text-gray-500">Join the conversation</span>
+                     </div>
+                   </div>
+
+                   {/* Comments List */}
+                   <div className="p-6 space-y-4 bg-white rounded-b-lg">
+                     {post.comments.length > 0 ? (
+                       post.comments.map((comment) => (
+                         <div key={comment._id} className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition-all duration-200 shadow-sm">
+                           <div className="flex items-start space-x-3">
+                             <div className="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                               {comment.user.username.charAt(0).toUpperCase()}
+                             </div>
+                             <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-2 mb-1">
+                               <p className="font-semibold text-gray-900 text-sm">{comment.user.username}</p>
+                               <span className="text-xs text-gray-400">•</span>
+                               <p className="text-xs text-gray-500">{formatDate(comment.createdAt)}</p>
+                             </div>
+                             <p className="text-gray-700 text-sm leading-relaxed">{comment.content}</p>
+                             <div className="flex items-center gap-4 mt-2 pt-2 border-t border-gray-100">
+                                 <button className="text-xs text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1">
+                                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                   </svg>
+                                   Like
+                                 </button>
+                                 <button className="text-xs text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1">
+                                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                   </svg>
+                                   Reply
+                                 </button>
+                               </div>
+                             </div>
+                           </div>
+                         </div>
+                       ))
+                     ) : (
+                       <div className="text-center py-6">
+                         <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                           <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                           </svg>
+                         </div>
+                         <p className="text-gray-500 text-sm">No comments yet. Be the first to share your thoughts!</p>
+                       </div>
+                     )}
+
+                     {/* Add Comment Section */}
+                     <div className="bg-white border-2 border-blue-200 rounded-lg p-4 shadow-md">
+                       <div className="flex items-start space-x-3">
+                         <div className="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                           {user?.username.charAt(0).toUpperCase()}
+                         </div>
+                         <div className="flex-1">
+                           <div className="mb-2">
+                             <p className="text-sm font-medium text-gray-900 mb-1">Add a comment</p>
+                             <p className="text-xs text-gray-500">Share your thoughts and experiences</p>
+                           </div>
+                           <div className="space-y-2">
+                             <textarea
+                               value={commentInputs[post._id] || ''}
+                               onChange={(e) => setCommentInputs({ ...commentInputs, [post._id]: e.target.value })}
+                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                               placeholder="What are your thoughts on this post? Share your travel experience..."
+                               rows={2}
+                               onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && addComment(post._id)}
+                             />
+                             <div className="flex items-center justify-between">
+                               <p className="text-xs text-gray-500">
+                                 Press Enter to post, Shift+Enter for new line
+                               </p>
+                               <button
+                                 onClick={() => addComment(post._id)}
+                                 disabled={!commentInputs[post._id]?.trim()}
+                                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                               >
+                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                 </svg>
+                                 Post Comment
+                               </button>
+                             </div>
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
               </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex justify-center mt-12 space-x-3">
+              <button
+                onClick={() => fetchPosts(currentPage - 1)}
+                disabled={!pagination.hasPrev}
+                className={`px-6 py-3 rounded-xl font-medium transition-colors ${
+                  pagination.hasPrev
+                    ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                Previous
+              </button>
+              
+              <span className="px-6 py-3 text-gray-600 font-medium">
+                Page {pagination.currentPage} of {pagination.totalPages}
+              </span>
+              
+              <button
+                onClick={() => fetchPosts(currentPage + 1)}
+                disabled={!pagination.hasNext}
+                className={`px-6 py-3 rounded-xl font-medium transition-colors ${
+                  pagination.hasNext
+                    ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                Next
+              </button>
             </div>
-          ))}
+          )}
+
+          {posts.length === 0 && !loading && (
+            <div className="text-center py-20">
+              <div className="text-gray-400 mb-6">
+                <svg className="w-24 h-24 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">No posts yet</h3>
+              <p className="text-gray-600 mb-8 text-lg">Be the first to share your travel story!</p>
+              <button
+                onClick={() => setShowCreatePost(true)}
+                className="bg-blue-600 text-white px-8 py-4 rounded-xl hover:bg-blue-700 transition-colors font-semibold text-lg shadow-lg"
+              >
+                Create First Post
+              </button>
+            </div>
+          )}
         </div>
+      </section>
 
-        {/* Pagination */}
-        {pagination && pagination.totalPages > 1 && (
-          <div className="flex justify-center mt-8 space-x-2">
-            <button
-              onClick={() => fetchPosts(currentPage - 1)}
-              disabled={!pagination.hasPrev}
-              className={`px-4 py-2 rounded-lg ${
-                pagination.hasPrev
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              Previous
-            </button>
-            
-            <span className="px-4 py-2 text-gray-600">
-              Page {pagination.currentPage} of {pagination.totalPages}
-            </span>
-            
-            <button
-              onClick={() => fetchPosts(currentPage + 1)}
-              disabled={!pagination.hasNext}
-              className={`px-4 py-2 rounded-lg ${
-                pagination.hasNext
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              Next
-            </button>
-          </div>
-        )}
-
-        {posts.length === 0 && !loading && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
+      {/* Create Post Modal */}
+      {showCreatePost && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-3xl font-bold text-gray-900">Create New Post</h2>
+              <button
+                onClick={() => setShowCreatePost(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No posts yet</h3>
-            <p className="text-gray-600 mb-4">Be the first to share your travel story!</p>
-            <button
-              onClick={() => setShowCreatePost(true)}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-            >
-              Create First Post
-            </button>
+            <form onSubmit={createPost}>
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Title *
+                </label>
+                <input
+                  type="text"
+                  value={newPost.title}
+                  onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                  placeholder="Enter post title..."
+                  maxLength={200}
+                  required
+                />
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Content *
+                </label>
+                <textarea
+                  value={newPost.content}
+                  onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={8}
+                  placeholder="Share your travel story, tips, or ask questions..."
+                  maxLength={2000}
+                  required
+                />
+              </div>
+              <div className="mb-8">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Tags (optional)
+                </label>
+                <input
+                  type="text"
+                  value={newPost.tags}
+                  onChange={(e) => setNewPost({ ...newPost, tags: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="travel, tips, backpacking (comma separated)"
+                />
+              </div>
+              <div className="flex justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setShowCreatePost(false)}
+                  className="px-6 py-3 text-gray-600 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-semibold"
+                >
+                  Create Post
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
