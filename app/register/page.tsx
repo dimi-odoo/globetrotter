@@ -154,7 +154,7 @@ export default function RegisterPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <Globe className="w-8 h-8 text-indigo-600" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
               Globetrotter
             </span>
           </div>
@@ -168,13 +168,13 @@ export default function RegisterPage() {
           {/* Progress Bar */}
           <div className="w-full max-w-md mx-auto mb-8">
             <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
-              <span className={step >= 1 ? 'text-indigo-600 font-medium' : ''}>Profile</span>
-              <span className={step >= 2 ? 'text-indigo-600 font-medium' : ''}>Account</span>
-              <span className={step >= 3 ? 'text-indigo-600 font-medium' : ''}>Details</span>
+              <span className={step >= 1 ? 'text-blue-600 font-medium' : ''}>Profile</span>
+              <span className={step >= 2 ? 'text-blue-600 font-medium' : ''}>Account</span>
+              <span className={step >= 3 ? 'text-blue-600 font-medium' : ''}>Details</span>
             </div>
             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-500 ease-out"
+                className="h-full bg-gradient-to-r from-indigo-500 to-blue-600 transition-all duration-500 ease-out"
                 style={{ width: `${getStepProgress()}%` }}
               ></div>
             </div>
@@ -205,7 +205,7 @@ export default function RegisterPage() {
                     Choose your profile photo
                   </label>
                   <div className="relative group">
-                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-xl ring-4 ring-indigo-100 transition-all duration-300 group-hover:ring-indigo-200">
+                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-xl ring-4 ring-blue-100 transition-all duration-300 group-hover:ring-blue-200">
                       <Image 
                         src={selectedAvatar} 
                         alt="Profile avatar" 
@@ -217,7 +217,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setIsAvatarModalOpen(true)}
-                      className="absolute -bottom-2 -right-2 bg-indigo-600 text-white p-2 rounded-full shadow-lg hover:bg-indigo-700 transition-colors"
+                      className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
                     >
                       <Camera className="w-4 h-4" />
                     </button>
@@ -487,7 +487,7 @@ export default function RegisterPage() {
                     (step === 1 && !validateStep1()) ||
                     (step === 2 && !validateStep2())
                   }
-                  className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-blue-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   Next Step
                 </button>
@@ -495,7 +495,7 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={loading || !validateStep3()}
-                  className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-blue-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   {loading ? (
                     <div className="flex items-center gap-2">
@@ -516,7 +516,7 @@ export default function RegisterPage() {
               Already have an account?{' '}
               <Link 
                 href="/login" 
-                className="text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+                className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
               >
                 Sign in
               </Link>

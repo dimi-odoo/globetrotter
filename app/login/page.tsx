@@ -162,6 +162,12 @@ export default function LoginPage() {
         <div className="order-1 lg:order-2">
           <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 lg:p-12 animate-slideIn">
             <div className="text-center mb-8">
+              <div className="inline-flex items-center gap-2 mb-4">
+                <Globe className="w-8 h-8 text-indigo-600" />
+                <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+                  Globetrotter
+                </span>
+              </div>
               <h2 className="text-3xl font-bold text-gray-900 mb-2">Sign In</h2>
               <p className="text-gray-600">Access your travel dashboard</p>
             </div>
@@ -235,9 +241,9 @@ export default function LoginPage() {
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                     Password
                   </label>
-                  <Link 
-                    href="/forgot-password" 
-                    className="text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
                   >
                     Forgot password?
                   </Link>
@@ -285,7 +291,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl group"
+                className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:from-indigo-700 hover:to-blue-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl group"
               >
                 {loading ? (
                   <div className="flex items-center justify-center gap-2">
@@ -316,7 +322,7 @@ export default function LoginPage() {
                 Don't have an account?{' '}
                 <Link 
                   href="/register" 
-                  className="text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+                  className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
                 >
                   Create account
                 </Link>

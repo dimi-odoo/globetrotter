@@ -44,6 +44,8 @@ export default function Home() {
   const citiesScrollRef = useRef<HTMLDivElement>(null);
   const tripsScrollRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isCitiesScrolling, setIsCitiesScrolling] = useState(true);
+  const [isTripsScrolling, setIsTripsScrolling] = useState(true);
   const router = useRouter();
 
   // Function to get city image from Google Places API
@@ -306,7 +308,7 @@ export default function Home() {
   // Auto-scroll functionality
   useEffect(() => {
     const scrollContainer = (ref: React.RefObject<HTMLDivElement | null>, speed: number = 1) => {
-      if (!ref.current) return;
+      if (!ref.current) return null;
       
       const container = ref.current;
       let scrollAmount = 0;
@@ -325,14 +327,33 @@ export default function Home() {
       return interval;
     };
 
-    const citiesInterval = citiesScrollRef.current ? scrollContainer(citiesScrollRef, 1) : null;
-    const tripsInterval = user && tripsScrollRef.current ? scrollContainer(tripsScrollRef, 0.8) : null;
+    let citiesInterval: NodeJS.Timeout | null = null;
+    let tripsInterval: NodeJS.Timeout | null = null;
+
+    if (isCitiesScrolling && citiesScrollRef.current) {
+      const interval = scrollContainer(citiesScrollRef, 1);
+      if (interval) citiesInterval = interval;
+    }
+    
+    if (isTripsScrolling && user && tripsScrollRef.current) {
+      const interval = scrollContainer(tripsScrollRef, 0.8);
+      if (interval) tripsInterval = interval;
+    }
 
     return () => {
       if (citiesInterval) clearInterval(citiesInterval);
       if (tripsInterval) clearInterval(tripsInterval);
     };
-  }, [user, topCities.length]); // Use topCities.length instead of the full array
+  }, [user, topCities.length, isCitiesScrolling, isTripsScrolling]);
+
+  // Handle user interactions with scroll containers
+  const handleScrollInteraction = (containerType: 'cities' | 'trips', action: 'pause' | 'resume') => {
+    if (containerType === 'cities') {
+      setIsCitiesScrolling(action === 'resume');
+    } else if (containerType === 'trips') {
+      setIsTripsScrolling(action === 'resume');
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -601,6 +622,11 @@ export default function Home() {
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
             }}
+            onMouseEnter={() => handleScrollInteraction('cities', 'pause')}
+            onMouseLeave={() => handleScrollInteraction('cities', 'resume')}
+            onWheel={() => handleScrollInteraction('cities', 'pause')}
+            onTouchStart={() => handleScrollInteraction('cities', 'pause')}
+            onTouchEnd={() => setTimeout(() => handleScrollInteraction('cities', 'resume'), 2000)}
           >
             {isLoadingCities ? (
               <div className="flex justify-center items-center py-20">
@@ -688,6 +714,11 @@ export default function Home() {
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none',
               }}
+              onMouseEnter={() => handleScrollInteraction('trips', 'pause')}
+              onMouseLeave={() => handleScrollInteraction('trips', 'resume')}
+              onWheel={() => handleScrollInteraction('trips', 'pause')}
+              onTouchStart={() => handleScrollInteraction('trips', 'pause')}
+              onTouchEnd={() => setTimeout(() => handleScrollInteraction('trips', 'resume'), 2000)}
             >
               <div className="flex gap-6 w-max">
                 {[...previousTrips, ...previousTrips].map((trip, index) => (

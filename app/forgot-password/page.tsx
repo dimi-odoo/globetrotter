@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <Globe className="w-8 h-8 text-indigo-600" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
               Globetrotter
             </span>
           </div>
@@ -111,7 +111,7 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl group"
+              className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:from-indigo-700 hover:to-blue-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl group"
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
@@ -131,7 +131,7 @@ export default function ForgotPasswordPage() {
           <div className="text-center mt-8 pt-6 border-t border-gray-100">
             <Link 
               href="/login" 
-              className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+              className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Sign In

@@ -261,18 +261,18 @@ export default function SearchPage() {
               >
                 Plan Trip
               </Link>
-              <Link
+                      <Link
                 href="/community"
                 className="text-gray-600 hover:text-gray-900 font-medium"
-              >
+                      >
                 Community
-              </Link>
-              <Link
+                      </Link>
+                      <Link
                 href="/"
                 className="text-gray-600 hover:text-gray-900 font-medium"
               >
                 ← Back to Home
-              </Link>
+                  </Link>
             </div>
           </div>
         </div>
@@ -300,7 +300,7 @@ export default function SearchPage() {
                     placeholder="Search cities, places, attractions..."
                     className="w-full px-4 text-gray-700 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
                   />
-                </div>
+              </div>
 
                 {/* Category Filter */}
                 <div>
@@ -320,28 +320,28 @@ export default function SearchPage() {
 
                 {/* Sort By */}
                 <div>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
                     className="w-full px-4 text-gray-700 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
+                >
                     <option value="relevance">Relevance</option>
-                    <option value="rating">Highest Rated</option>
+                  <option value="rating">Highest Rated</option>
                     <option value="popular">Most Popular</option>
-                  </select>
+                </select>
                 </div>
               </div>
 
               <div className="mt-6 text-center">
-                <button
+              <button
                   type="submit"
                   disabled={loading}
                   className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50"
-                >
+              >
                   {loading ? 'Searching...' : 'Search'}
-                </button>
-              </div>
+              </button>
             </div>
+          </div>
           </form>
         </div>
       </section>
@@ -376,11 +376,11 @@ export default function SearchPage() {
                 <div className="text-center mb-12">
                   <h2 className="text-3xl font-bold text-gray-900 mb-4">
                     Search Results
-                  </h2>
+              </h2>
                   <p className="text-xl text-gray-600">
                     Found {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for "{searchQuery}"
-                  </p>
-                </div>
+              </p>
+            </div>
                 <div className="space-y-10">
                   {searchResults.map((result) => (
                     result.matchType === 'city' ? (
@@ -393,7 +393,7 @@ export default function SearchPage() {
                       />
                     )
                   ))}
-                </div>
+            </div>
               </>
             )}
           </>
@@ -444,11 +444,11 @@ export default function SearchPage() {
               <Link href="/search" className="text-gray-400 hover:text-white transition-colors">
                 Search
               </Link>
-            </div>
-          </div>
-        </div>
+                      </div>
+                  </div>
+                </div>
       </footer>
-    </div>
+              </div>
   );
 }
 
