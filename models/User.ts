@@ -7,9 +7,15 @@ export interface IUser {
   password: string;
   firstName: string;
   lastName: string;
+  fullName?: string; // Virtual field
   phoneNumber: string;
+  phone?: string; // Alias for phoneNumber
+  dateOfBirth?: string;
+  gender?: string;
+  address?: string;
   city: string;
   country: string;
+  occupation?: string;
   description: string;
   profilePhoto: string;
   createdAt?: Date;
@@ -55,6 +61,20 @@ const userSchema = new mongoose.Schema<IUser>({
     required: [true, 'Phone number is required'],
     trim: true
   },
+  dateOfBirth: {
+    type: String,
+    trim: true
+  },
+  gender: {
+    type: String,
+    enum: ['male', 'female', 'other', 'prefer-not-to-say'],
+    trim: true
+  },
+  address: {
+    type: String,
+    trim: true,
+    maxlength: [200, 'Address cannot exceed 200 characters']
+  },
   city: {
     type: String,
     required: [true, 'City is required'],
@@ -64,6 +84,11 @@ const userSchema = new mongoose.Schema<IUser>({
     type: String,
     required: [true, 'Country is required'],
     trim: true
+  },
+  occupation: {
+    type: String,
+    trim: true,
+    maxlength: [100, 'Occupation cannot exceed 100 characters']
   },
   description: {
     type: String,
@@ -75,7 +100,23 @@ const userSchema = new mongoose.Schema<IUser>({
     required: [true, 'Profile photo is required']
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Virtual field for fullName
+userSchema.virtual('fullName').get(function() {
+  return `${this.firstName} ${this.lastName}`;
+});
+
+// Virtual field for phone (alias for phoneNumber)
+userSchema.virtual('phone').get(function() {
+  return this.phoneNumber;
+});
+
+userSchema.virtual('phone').set(function(value: string) {
+  this.phoneNumber = value;
 });
 
 const User = mongoose.models.User || mongoose.model<IUser>('User', userSchema);

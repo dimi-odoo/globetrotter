@@ -5,16 +5,239 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
 
+// Types for API responses
+interface Place {
+  place_name: string;
+  type: string;
+  rating: number;
+  significance: string;
+  weekly_off: string;
+  entrance_fee: number;
+  dslr_allowed: string;
+}
+
+interface City {
+  city: string;
+  city_average_rating: number;
+  best_time_to_visit: string;
+  places: Place[];
+}
+
+interface CityWithImage extends City {
+  image: string;
+  id: string;
+  state?: string;
+  description?: string;
+  attractions?: string[];
+  popular?: boolean;
+  visitors?: string;
+}
+
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [sortBy, setSortBy] = useState('');
   const [user, setUser] = useState<any>(null);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [topCities, setTopCities] = useState<CityWithImage[]>([]);
+  const [isLoadingCities, setIsLoadingCities] = useState(true);
   const citiesScrollRef = useRef<HTMLDivElement>(null);
   const tripsScrollRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  // Function to get city image from Unsplash
+  const getCityImage = async (cityName: string): Promise<string> => {
+    try {
+      // Try multiple search queries for better results
+      const searchQueries = [
+        `${cityName} india landmark`,
+        `${cityName} tourism india`,
+        `${cityName} city india`,
+        `${cityName} monument`,
+        cityName
+      ];
+      
+      for (const query of searchQueries) {
+        try {
+          const response = await fetch(
+            `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=8S0JjGVzS_QPdGnVNRzZHnGpNJ3J8X5s1qqRYgfXJ-I`
+          );
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.results && data.results.length > 0) {
+              return data.results[0].urls.regular;
+            }
+          }
+        } catch (error) {
+          console.log(`Failed to fetch image for query: ${query}`);
+          continue;
+        }
+      }
+      
+      // Fallback to a default India image if all searches fail
+      return `https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`;
+    } catch (error) {
+      console.error('Error fetching image for', cityName, ':', error);
+      return `https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`;
+    }
+  };
+
+  // Function to fetch cities from Indian Tourism API via our API route
+  const fetchTopCities = async () => {
+    try {
+      setIsLoadingCities(true);
+      console.log('Fetching cities from API...');
+      
+      // Use our internal API route to avoid CORS issues
+      const response = await fetch('/api/cities', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      console.log('API Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Raw API response:', data);
+      
+      // Extract cities array from response
+      const cities: City[] = Array.isArray(data) ? data : (data.cities || data);
+      console.log('Extracted cities:', cities.length, 'cities');
+      
+      if (!Array.isArray(cities) || cities.length === 0) {
+        throw new Error('No cities data received');
+      }
+      
+      // Sort cities by rating and take top 10
+      const topRatedCities = cities
+        .filter(city => city.city_average_rating && city.places && Array.isArray(city.places) && city.places.length > 0)
+        .sort((a, b) => b.city_average_rating - a.city_average_rating)
+        .slice(0, 10);
+      
+      console.log('Top rated cities after filtering:', topRatedCities.length);
+      
+      // Fetch images for each city with enhanced search
+      const citiesWithImages: CityWithImage[] = await Promise.all(
+        topRatedCities.map(async (city, index) => {
+          try {
+            const image = await getCityImage(city.city);
+            
+            // Ensure places is an array of proper objects
+            let places = city.places;
+            if (places.length > 0 && typeof places[0] === 'string') {
+              // If places are strings, try to parse them or create simple objects
+              places = city.places.map((placeStr: any, idx: number) => ({
+                place_name: `Attraction ${idx + 1}`,
+                type: 'Tourist Spot',
+                rating: city.city_average_rating,
+                significance: 'Tourist',
+                weekly_off: 'Not Available',
+                entrance_fee: 0,
+                dslr_allowed: 'Yes'
+              }));
+            }
+            
+            return {
+              ...city,
+              places,
+              image,
+              id: city.city.toLowerCase().replace(/\s+/g, '-'),
+              // Add computed properties for backward compatibility
+              state: 'India', // Default since API doesn't provide state
+              description: `Explore the beautiful city of ${city.city} with its amazing attractions and rich culture.`,
+              attractions: places.slice(0, 3).map(place => place.place_name),
+              popular: city.city_average_rating >= 4.5,
+              visitors: `${Math.round(city.city_average_rating * 5)}M+`
+            };
+          } catch (error) {
+            console.error(`Error processing city ${city.city}:`, error);
+            // Return city with fallback image if image fetch fails
+            return {
+              ...city,
+              image: `https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`,
+              id: city.city.toLowerCase().replace(/\s+/g, '-'),
+              state: 'India',
+              description: `Explore the beautiful city of ${city.city} with its amazing attractions and rich culture.`,
+              attractions: city.places.slice(0, 3).map(place => typeof place === 'string' ? place : place.place_name),
+              popular: city.city_average_rating >= 4.5,
+              visitors: `${Math.round(city.city_average_rating * 5)}M+`
+            };
+          }
+        })
+      );
+      
+      console.log('Cities with images:', citiesWithImages.length);
+      setTopCities(citiesWithImages);
+    } catch (error) {
+      console.error('Error fetching cities:', error);
+      
+      // Create fallback mock data based on API structure
+      const fallbackCities: CityWithImage[] = [
+        {
+          city: 'Agra',
+          city_average_rating: 4.8,
+          best_time_to_visit: 'October to March',
+          places: [
+            { place_name: 'Taj Mahal', type: 'Monument', rating: 4.9, significance: 'Historical', weekly_off: 'Friday', entrance_fee: 50, dslr_allowed: 'Yes' },
+            { place_name: 'Agra Fort', type: 'Fort', rating: 4.6, significance: 'Historical', weekly_off: 'None', entrance_fee: 30, dslr_allowed: 'Yes' },
+            { place_name: 'Mehtab Bagh', type: 'Garden', rating: 4.4, significance: 'Historical', weekly_off: 'None', entrance_fee: 25, dslr_allowed: 'Yes' }
+          ],
+          image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          id: 'agra',
+          state: 'Uttar Pradesh',
+          description: 'Home to the magnificent Taj Mahal and rich Mughal heritage.',
+          attractions: ['Taj Mahal', 'Agra Fort', 'Mehtab Bagh'],
+          popular: true,
+          visitors: '24M+'
+        },
+        {
+          city: 'Jaipur',
+          city_average_rating: 4.6,
+          best_time_to_visit: 'October to March',
+          places: [
+            { place_name: 'Hawa Mahal', type: 'Palace', rating: 4.5, significance: 'Historical', weekly_off: 'None', entrance_fee: 50, dslr_allowed: 'Yes' },
+            { place_name: 'Amber Fort', type: 'Fort', rating: 4.7, significance: 'Historical', weekly_off: 'None', entrance_fee: 100, dslr_allowed: 'Yes' },
+            { place_name: 'City Palace', type: 'Palace', rating: 4.6, significance: 'Historical', weekly_off: 'None', entrance_fee: 75, dslr_allowed: 'Yes' }
+          ],
+          image: 'https://images.unsplash.com/photo-1599661046827-dacde6976549?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          id: 'jaipur',
+          state: 'Rajasthan',
+          description: 'The Pink City known for its royal palaces and vibrant culture.',
+          attractions: ['Hawa Mahal', 'Amber Fort', 'City Palace'],
+          popular: true,
+          visitors: '23M+'
+        },
+        {
+          city: 'Goa',
+          city_average_rating: 4.5,
+          best_time_to_visit: 'November to February',
+          places: [
+            { place_name: 'Baga Beach', type: 'Beach', rating: 4.3, significance: 'Tourist', weekly_off: 'None', entrance_fee: 0, dslr_allowed: 'Yes' },
+            { place_name: 'Basilica of Bom Jesus', type: 'Church', rating: 4.5, significance: 'Religious', weekly_off: 'None', entrance_fee: 0, dslr_allowed: 'Yes' },
+            { place_name: 'Fort Aguada', type: 'Fort', rating: 4.2, significance: 'Historical', weekly_off: 'None', entrance_fee: 25, dslr_allowed: 'Yes' }
+          ],
+          image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          id: 'goa',
+          state: 'Goa',
+          description: 'Beautiful beaches, Portuguese heritage, and vibrant nightlife.',
+          attractions: ['Baga Beach', 'Basilica of Bom Jesus', 'Fort Aguada'],
+          popular: true,
+          visitors: '23M+'
+        }
+      ];
+      
+      setTopCities(fallbackCities);
+    } finally {
+      setIsLoadingCities(false);
+    }
+  };
 
   useEffect(() => {
     // Check if user is logged in
@@ -22,6 +245,9 @@ export default function Home() {
     if (userData) {
       setUser(JSON.parse(userData));
     }
+    
+    // Fetch top cities from API
+    fetchTopCities();
   }, []);
 
   // Close dropdown when clicking outside
@@ -47,7 +273,7 @@ export default function Home() {
 
   // Auto-scroll functionality
   useEffect(() => {
-    const scrollContainer = (ref: React.RefObject<HTMLDivElement>, speed: number = 1) => {
+    const scrollContainer = (ref: React.RefObject<HTMLDivElement | null>, speed: number = 1) => {
       if (!ref.current) return;
       
       const container = ref.current;
@@ -67,19 +293,24 @@ export default function Home() {
       return interval;
     };
 
-    const citiesInterval = scrollContainer(citiesScrollRef, 1);
-    const tripsInterval = user ? scrollContainer(tripsScrollRef, 0.8) : null;
+    const citiesInterval = citiesScrollRef.current ? scrollContainer(citiesScrollRef, 1) : null;
+    const tripsInterval = user && tripsScrollRef.current ? scrollContainer(tripsScrollRef, 0.8) : null;
 
     return () => {
       if (citiesInterval) clearInterval(citiesInterval);
       if (tripsInterval) clearInterval(tripsInterval);
     };
-  }, [user]);
+  }, [user, topCities.length]); // Use topCities.length instead of the full array
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle search functionality
-    console.log('Search:', { searchQuery, filterCategory, sortBy });
+    // Redirect to search page with query parameters
+    const params = new URLSearchParams();
+    if (searchQuery) params.append('q', searchQuery);
+    if (filterCategory) params.append('category', filterCategory);
+    if (sortBy) params.append('sort', sortBy);
+    
+    router.push(`/search?${params.toString()}`);
   };
 
   const handleCityClick = (cityId: string) => {
@@ -130,76 +361,6 @@ export default function Home() {
     }
   ];
 
-  // Mock data for top Indian cities
-  const topCities = [
-    {
-      id: 'delhi',
-      city: 'Delhi',
-      state: 'Delhi',
-      image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      popular: true,
-      description: 'India\'s capital with rich history and culture',
-      attractions: ['Red Fort', 'India Gate', 'Qutub Minar'],
-      rating: 4.3,
-      visitors: '25M+'
-    },
-    {
-      id: 'mumbai',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      popular: true,
-      description: 'Financial capital and city of dreams',
-      attractions: ['Gateway of India', 'Marine Drive', 'Elephanta Caves'],
-      rating: 4.2,
-      visitors: '20M+'
-    },
-    {
-      id: 'jaipur',
-      city: 'Jaipur',
-      state: 'Rajasthan',
-      image: 'https://images.unsplash.com/photo-1599661046827-dacde6976549?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      popular: true,
-      description: 'The Pink City with royal palaces',
-      attractions: ['Hawa Mahal', 'Amber Fort', 'City Palace'],
-      rating: 4.5,
-      visitors: '15M+'
-    },
-    {
-      id: 'bangalore',
-      city: 'Bangalore',
-      state: 'Karnataka',
-      image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      popular: false,
-      description: 'Silicon Valley of India with pleasant weather',
-      attractions: ['Lalbagh Garden', 'Bangalore Palace', 'Cubbon Park'],
-      rating: 4.1,
-      visitors: '12M+'
-    },
-    {
-      id: 'kolkata',
-      city: 'Kolkata',
-      state: 'West Bengal',
-      image: 'https://images.unsplash.com/photo-1558431382-27e303142255?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      popular: false,
-      description: 'Cultural capital with colonial architecture',
-      attractions: ['Victoria Memorial', 'Howrah Bridge', 'Dakshineswar Temple'],
-      rating: 4.0,
-      visitors: '10M+'
-    },
-    {
-      id: 'chennai',
-      city: 'Chennai',
-      state: 'Tamil Nadu',
-      image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      popular: false,
-      description: 'Gateway to South India with rich traditions',
-      attractions: ['Marina Beach', 'Kapaleeshwarar Temple', 'Fort St. George'],
-      rating: 3.9,
-      visitors: '8M+'
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
@@ -228,7 +389,7 @@ export default function Home() {
                       className="flex items-center bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors font-medium"
                     >
                       <img
-                        src={user.avatar}
+                        src={user.profilePhoto}
                         alt="Profile"
                         className="w-6 h-6 rounded-full mr-2"
                       />
@@ -403,56 +564,67 @@ export default function Home() {
               msOverflowStyle: 'none',
             }}
           >
-            <div className="flex gap-6 w-max">
-              {[...topCities, ...topCities].map((city, index) => (
-                <div 
-                  key={`${city.id}-${index}`} 
-                  className="w-80 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer flex-shrink-0"
-                  onClick={() => handleCityClick(city.id)}
-                >
-                  <div className="relative h-48 overflow-hidden rounded-t-2xl">
-                    {city.popular && (
-                      <div className="absolute top-4 right-4 bg-red-500 text-white text-xs px-3 py-1 rounded-full z-10 font-medium">
-                        Popular
+            {isLoadingCities ? (
+              <div className="flex justify-center items-center py-20">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+              </div>
+            ) : topCities.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-gray-500 text-lg">Unable to load cities. Please try again later.</p>
+              </div>
+            ) : (
+              <div className="flex gap-6 w-max">
+                {[...topCities, ...topCities].map((city, index) => (
+                  <div 
+                    key={`${city.id}-${index}`} 
+                    className="w-80 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer flex-shrink-0"
+                    onClick={() => handleCityClick(city.id)}
+                  >
+                    <div className="relative h-48 overflow-hidden rounded-t-2xl">
+                      {city.city_average_rating >= 4.5 && (
+                        <div className="absolute top-4 right-4 bg-red-500 text-white text-xs px-3 py-1 rounded-full z-10 font-medium">
+                          Top Rated
+                        </div>
+                      )}
+                      <div className="absolute top-4 left-4 bg-black/50 text-white text-xs px-3 py-1 rounded-full z-10 font-medium">
+                        ⭐ {city.city_average_rating}
                       </div>
-                    )}
-                    <div className="absolute top-4 left-4 bg-black/50 text-white text-xs px-3 py-1 rounded-full z-10 font-medium">
-                      ⭐ {city.rating}
+                      <Image
+                        src={city.image}
+                        alt={city.city}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                      <div className="absolute bottom-4 left-4 text-white">
+                        <p className="text-sm font-medium">Best time: {city.best_time_to_visit}</p>
+                      </div>
                     </div>
-                    <Image
-                      src={city.image}
-                      alt={`${city.city}, ${city.state}`}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                    <div className="absolute bottom-4 left-4 text-white">
-                      <p className="text-sm font-medium">{city.visitors} visitors/year</p>
+                    <div className="p-6">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                        {city.city}
+                      </h3>
+                      <p className="text-gray-500 text-sm mb-3">
+                        {city.places.length} attractions
+                      </p>
+                      <p className="text-gray-600 mb-3 text-sm">
+                        Explore the beautiful city of {city.city} with its amazing attractions and rich culture.
+                      </p>
+                      <p className="text-gray-500 text-xs mb-4">
+                        {city.places.slice(0, 3).map(place => place.place_name).join(' • ')}
+                        {city.places.length > 3 && ` + ${city.places.length - 3} more`}
+                      </p>
+                      <button className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center">
+                        Explore City 
+                        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                      {city.city}
-                    </h3>
-                    <p className="text-gray-500 text-sm mb-3">
-                      {city.state}
-                    </p>
-                    <p className="text-gray-600 mb-3 text-sm">
-                      {city.description}
-                    </p>
-                    <p className="text-gray-500 text-xs mb-4">
-                      {city.attractions.join(' • ')}
-                    </p>
-                    <button className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center">
-                      Explore City 
-                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>

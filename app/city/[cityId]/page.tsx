@@ -3,268 +3,214 @@
 import { useState, useEffect } from 'react';
 import Link from "next/link";
 import Image from "next/image";
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
+// Types matching our API structure
 interface Place {
-  id: number;
-  name: string;
-  image: string;
+  place_name: string;
+  type: string;
   rating: number;
-  timeNeeded: string;
-  entranceFee: string;
-  weeklyOff: string;
-  bestTimeToVisit: string;
-  description: string;
-  category: string;
+  significance: string;
+  weekly_off: string;
+  entrance_fee: number;
+  dslr_allowed: string;
 }
 
 interface CityData {
-  id: string;
   city: string;
-  state: string;
-  image: string;
-  description: string;
-  bestTimeToVisit: string;
+  city_average_rating: number;
+  best_time_to_visit: string;
   places: Place[];
+  image?: string;
+  id?: string;
+  state?: string;
+  description?: string;
+  attractions?: string[];
+  popular?: boolean;
+  visitors?: string;
 }
 
-const cityData: Record<string, CityData> = {
-  'delhi': {
-    id: 'delhi',
-    city: 'Delhi',
-    state: 'Delhi',
-    image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-    description: 'India\'s capital city, a blend of ancient history and modern development.',
-    bestTimeToVisit: 'October to March',
-    places: [
-      {
-        id: 1,
-        name: 'Red Fort',
-        image: 'https://images.unsplash.com/photo-1597149960419-0d900ac2e3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        rating: 4.3,
-        timeNeeded: '2-3 hrs',
-        entranceFee: '₹35 (Indians), ₹500 (Foreigners)',
-        weeklyOff: 'Monday',
-        bestTimeToVisit: 'October to March',
-        description: 'Historic fortified palace of the Mughal emperors',
-        category: 'Historical'
-      },
-      {
-        id: 2,
-        name: 'India Gate',
-        image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        rating: 4.5,
-        timeNeeded: '1-2 hrs',
-        entranceFee: 'Free',
-        weeklyOff: 'None',
-        bestTimeToVisit: 'Evening (5-8 PM)',
-        description: 'War memorial dedicated to Indian soldiers',
-        category: 'Monument'
-      },
-      {
-        id: 3,
-        name: 'Qutub Minar',
-        image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        rating: 4.2,
-        timeNeeded: '1-2 hrs',
-        entranceFee: '₹30 (Indians), ₹500 (Foreigners)',
-        weeklyOff: 'None',
-        bestTimeToVisit: 'October to March',
-        description: 'UNESCO World Heritage Site, tallest brick minaret',
-        category: 'Historical'
-      },
-      {
-        id: 4,
-        name: 'Lotus Temple',
-        image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        rating: 4.4,
-        timeNeeded: '1-2 hrs',
-        entranceFee: 'Free',
-        weeklyOff: 'Monday',
-        bestTimeToVisit: 'October to March',
-        description: 'Bahá\'í House of Worship known for its lotus-like shape',
-        category: 'Religious'
-      },
-      {
-        id: 5,
-        name: 'Humayun\'s Tomb',
-        image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        rating: 4.3,
-        timeNeeded: '1-2 hrs',
-        entranceFee: '₹30 (Indians), ₹500 (Foreigners)',
-        weeklyOff: 'None',
-        bestTimeToVisit: 'October to March',
-        description: 'UNESCO World Heritage Site, Mughal architecture',
-        category: 'Historical'
-      }
-    ]
-  },
-  'mumbai': {
-    id: 'mumbai',
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-    description: 'The financial capital of India, known as the City of Dreams.',
-    bestTimeToVisit: 'November to February',
-    places: [
-      {
-        id: 1,
-        name: 'Gateway of India',
-        image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        rating: 4.2,
-        timeNeeded: '1-2 hrs',
-        entranceFee: 'Free',
-        weeklyOff: 'None',
-        bestTimeToVisit: 'Evening (5-8 PM)',
-        description: 'Iconic arch monument overlooking the Arabian Sea',
-        category: 'Monument'
-      },
-      {
-        id: 2,
-        name: 'Marine Drive',
-        image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        rating: 4.4,
-        timeNeeded: '2-3 hrs',
-        entranceFee: 'Free',
-        weeklyOff: 'None',
-        bestTimeToVisit: 'Evening (6-9 PM)',
-        description: 'Beautiful promenade along the coast, Queen\'s Necklace',
-        category: 'Scenic'
-      },
-      {
-        id: 3,
-        name: 'Elephanta Caves',
-        image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        rating: 4.1,
-        timeNeeded: '4-5 hrs',
-        entranceFee: '₹40 (Indians), ₹600 (Foreigners)',
-        weeklyOff: 'Monday',
-        bestTimeToVisit: 'November to February',
-        description: 'UNESCO World Heritage Site with ancient cave temples',
-        category: 'Historical'
-      },
-      {
-        id: 4,
-        name: 'Chhatrapati Shivaji Terminus',
-        image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        rating: 4.3,
-        timeNeeded: '1 hr',
-        entranceFee: 'Free',
-        weeklyOff: 'None',
-        bestTimeToVisit: 'Anytime',
-        description: 'UNESCO World Heritage railway station, Victorian architecture',
-        category: 'Architecture'
-      },
-      {
-        id: 5,
-        name: 'Juhu Beach',
-        image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        rating: 3.9,
-        timeNeeded: '2-3 hrs',
-        entranceFee: 'Free',
-        weeklyOff: 'None',
-        bestTimeToVisit: 'Evening (5-8 PM)',
-        description: 'Popular beach known for street food and sunset views',
-        category: 'Beach'
-      }
-    ]
-  },
-  'jaipur': {
-    id: 'jaipur',
-    city: 'Jaipur',
-    state: 'Rajasthan',
-    image: 'https://images.unsplash.com/photo-1599661046827-dacde6976549?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-    description: 'The Pink City, known for its royal palaces and vibrant culture.',
-    bestTimeToVisit: 'October to March',
-    places: [
-      {
-        id: 1,
-        name: 'Hawa Mahal',
-        image: 'https://images.unsplash.com/photo-1599661046827-dacde6976549?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        rating: 4.2,
-        timeNeeded: '1-2 hrs',
-        entranceFee: '₹50 (Indians), ₹200 (Foreigners)',
-        weeklyOff: 'None',
-        bestTimeToVisit: 'Morning (8-11 AM)',
-        description: 'Palace of Winds with intricate lattice work',
-        category: 'Palace'
-      },
-      {
-        id: 2,
-        name: 'Amber Fort',
-        image: 'https://images.unsplash.com/photo-1599661046827-dacde6976549?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        rating: 4.5,
-        timeNeeded: '3-4 hrs',
-        entranceFee: '₹100 (Indians), ₹500 (Foreigners)',
-        weeklyOff: 'None',
-        bestTimeToVisit: 'Morning (8-12 PM)',
-        description: 'Magnificent fort with stunning architecture and views',
-        category: 'Fort'
-      },
-      {
-        id: 3,
-        name: 'City Palace',
-        image: 'https://images.unsplash.com/photo-1599661046827-dacde6976549?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        rating: 4.3,
-        timeNeeded: '2-3 hrs',
-        entranceFee: '₹300 (Indians), ₹500 (Foreigners)',
-        weeklyOff: 'None',
-        bestTimeToVisit: 'Morning (9-12 PM)',
-        description: 'Royal residence with museums and courtyards',
-        category: 'Palace'
-      },
-      {
-        id: 4,
-        name: 'Jantar Mantar',
-        image: 'https://images.unsplash.com/photo-1599661046827-dacde6976549?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        rating: 4.1,
-        timeNeeded: '1-2 hrs',
-        entranceFee: '₹50 (Indians), ₹200 (Foreigners)',
-        weeklyOff: 'None',
-        bestTimeToVisit: 'Morning (9-11 AM)',
-        description: 'UNESCO World Heritage astronomical observatory',
-        category: 'Historical'
-      },
-      {
-        id: 5,
-        name: 'Nahargarh Fort',
-        image: 'https://images.unsplash.com/photo-1599661046827-dacde6976549?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        rating: 4.2,
-        timeNeeded: '2-3 hrs',
-        entranceFee: '₹30 (Indians), ₹80 (Foreigners)',
-        weeklyOff: 'None',
-        bestTimeToVisit: 'Evening (4-7 PM)',
-        description: 'Hill fort offering panoramic views of Jaipur',
-        category: 'Fort'
-      }
-    ]
-  }
-};
-
-export default function CityDetails() {
+export default function CityPage() {
   const params = useParams();
-  const cityId = params.cityId as string;
+  const router = useRouter();
+  const [cityData, setCityData] = useState<CityData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('All');
-  
-  const city = cityData[cityId];
-  
-  if (!city) {
+  const [user, setUser] = useState<any>(null);
+
+  // Get city image from Unsplash
+  const getCityImage = async (cityName: string): Promise<string> => {
+    try {
+      const searchQueries = [
+        `${cityName} india landmark`,
+        `${cityName} tourism india`,
+        `${cityName} city india`,
+        cityName
+      ];
+      
+      for (const query of searchQueries) {
+        try {
+          const response = await fetch(
+            `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=8S0JjGVzS_QPdGnVNRzZHnGpNJ3J8X5s1qqRYgfXJ-I`
+          );
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.results && data.results.length > 0) {
+              return data.results[0].urls.regular;
+            }
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+      
+      return `https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80`;
+    } catch (error) {
+      return `https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80`;
+    }
+  };
+
+  // Get place image from Unsplash
+  const getPlaceImage = async (placeName: string, cityName: string): Promise<string> => {
+    const queries = [
+      `${placeName} ${cityName} india`,
+      `${placeName} tourist attraction`,
+      `${placeName} monument`,
+      `${cityName} ${placeName}`,
+      placeName
+    ];
+
+    for (const query of queries) {
+      try {
+        const response = await fetch(
+          `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=8S0JjGVzS_QPdGnVNRzZHnGpNJ3J8X5s1qqRYgfXJ-I`
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.results && data.results.length > 0) {
+            return data.results[0].urls.regular;
+          }
+        }
+      } catch (error) {
+        continue;
+      }
+    }
+    
+    // Fallback image
+    return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+  };
+
+  useEffect(() => {
+    // Check if user is logged in
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchCityData = async () => {
+      if (!params.cityId) return;
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch cities data from our API
+        const response = await fetch('/api/cities');
+        if (!response.ok) {
+          throw new Error('Failed to fetch cities data');
+        }
+
+        const cities: CityData[] = await response.json();
+        
+        // Find the city by matching the cityId parameter
+        const cityId = params.cityId as string;
+        const foundCity = cities.find(city => 
+          city.city.toLowerCase().replace(/\s+/g, '-') === cityId ||
+          city.city.toLowerCase() === cityId.replace(/-/g, ' ')
+        );
+
+        if (!foundCity) {
+          setError('City not found');
+          setLoading(false);
+          return;
+        }
+
+        // Get image for the city
+        const image = await getCityImage(foundCity.city);
+
+        // Enhance city data
+        const enhancedCity: CityData = {
+          ...foundCity,
+          image,
+          id: foundCity.city.toLowerCase().replace(/\s+/g, '-'),
+          state: 'India',
+          description: `Discover the beautiful city of ${foundCity.city} with its ${foundCity.places.length} amazing attractions. Known for its rich culture and ${foundCity.city_average_rating}-star rated experiences.`,
+          attractions: foundCity.places.slice(0, 5).map(place => place.place_name),
+          popular: foundCity.city_average_rating >= 4.5,
+          visitors: `${Math.round(foundCity.city_average_rating * 5)}M+`
+        };
+
+        setCityData(enhancedCity);
+      } catch (err) {
+        console.error('Error fetching city data:', err);
+        setError('Failed to load city information');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCityData();
+  }, [params.cityId]);
+
+  const getUniqueCategories = () => {
+    if (!cityData) return ['All'];
+    const categories = ['All', ...new Set(cityData.places.map(place => place.type))];
+    return categories;
+  };
+
+  const getFilteredPlaces = () => {
+    if (!cityData) return [];
+    if (selectedCategory === 'All') return cityData.places;
+    return cityData.places.filter(place => place.type === selectedCategory);
+  };
+
+  const formatEntranceFee = (fee: number) => {
+    if (fee === 0) return 'Free';
+    return `₹${fee}`;
+  };
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">City Not Found</h1>
-          <Link href="/" className="text-blue-600 hover:text-blue-700">
-            Return to Home
-          </Link>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading city information...</p>
         </div>
       </div>
     );
   }
 
-  const categories = ['All', ...Array.from(new Set(city.places.map(place => place.category)))];
-  const filteredPlaces = selectedCategory === 'All' 
-    ? city.places 
-    : city.places.filter(place => place.category === selectedCategory);
+  if (error || !cityData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">City Not Found</h1>
+          <p className="text-gray-600 mb-6">{error || 'The requested city could not be found.'}</p>
+          <Link
+            href="/"
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -272,137 +218,172 @@ export default function CityDetails() {
       <nav className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-gray-900">
+            <Link href="/" className="flex items-center">
+              <h1 className="text-2xl font-bold text-gray-900">
                 Globe<span className="text-blue-600">trotter</span>
-              </Link>
-            </div>
+              </h1>
+            </Link>
             <div className="flex items-center space-x-4">
               <Link
                 href="/"
                 className="text-gray-600 hover:text-gray-900 font-medium"
               >
-                ← Back to Home
+                Home
               </Link>
+              <Link
+                href="/search"
+                className="text-gray-600 hover:text-gray-900 font-medium"
+              >
+                Search
+              </Link>
+              {user ? (
+                <Link
+                  href="/profile"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Profile
+                </Link>
+              ) : (
+                <Link
+                  href="/login"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Login
+                </Link>
+              )}
             </div>
           </div>
         </div>
       </nav>
 
-      {/* City Hero Section */}
-      <section className="relative h-96 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-black/30 z-10"></div>
+      {/* Hero Section */}
+      <section className="relative h-96 bg-gray-900">
         <Image
-          src={city.image}
-          alt={city.city}
+          src={cityData.image!}
+          alt={cityData.city}
           fill
-          className="object-cover"
+          className="object-cover opacity-70"
         />
-        <div className="relative z-20 h-full flex items-center justify-center">
-          <div className="text-center text-white max-w-4xl mx-auto px-4">
-            <h1 className="text-5xl md:text-6xl font-bold mb-4">
-              {city.city}
-            </h1>
-            <p className="text-xl md:text-2xl opacity-90 mb-2">
-              {city.state}, India
-            </p>
-            <p className="text-lg opacity-80 mb-4">
-              {city.description}
-            </p>
-            <div className="bg-blue-600 text-white px-4 py-2 rounded-full inline-block">
-              Best Time to Visit: {city.bestTimeToVisit}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent"></div>
+        <div className="absolute inset-0 flex items-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div className="text-white">
+              <div className="flex items-center space-x-2 mb-2">
+                <span className="bg-yellow-500 text-black px-3 py-1 rounded-full text-sm font-medium">
+                  ⭐ {cityData.city_average_rating}/5
+                </span>
+                {cityData.popular && (
+                  <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                    Popular Destination
+                  </span>
+                )}
+              </div>
+              <h1 className="text-5xl font-bold mb-4">{cityData.city}</h1>
+              <p className="text-xl mb-2">{cityData.state}</p>
+              <p className="text-lg opacity-90 max-w-2xl">{cityData.description}</p>
+              <div className="mt-6 flex items-center space-x-6">
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                  </svg>
+                  <span>Best time: {cityData.best_time_to_visit}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                  </svg>
+                  <span>{cityData.places.length} Attractions</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
+                  </svg>
+                  <span>{cityData.visitors} visitors annually</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Category Filter */}
-      <section className="py-8 bg-white">
+      {/* Filter Section */}
+      <section className="bg-white py-8 border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap gap-4 justify-center">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-6 py-2 rounded-full font-medium transition-colors ${
-                  selectedCategory === category
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Attractions in {cityData.city}
+            </h2>
+            <div className="flex items-center space-x-4">
+              <span className="text-gray-600">Filter by category:</span>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                {category}
-              </button>
-            ))}
+                {getUniqueCategories().map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Places Section */}
-      <section className="py-12 bg-gray-50">
+      {/* Attractions Grid */}
+      <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Places to Visit in {city.city}
-            </h2>
-            <p className="text-xl text-gray-600">
-              Discover the best attractions and experiences
-            </p>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredPlaces.map((place) => (
-              <div key={place.id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <div className="relative h-48 overflow-hidden rounded-t-2xl">
-                  <Image
-                    src={place.image}
-                    alt={place.name}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute top-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
-                    ⭐ {place.rating}
-                  </div>
-                  <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-xs">
-                    {place.category}
-                  </div>
-                </div>
-                
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {place.name}
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-4">
-                    {place.description}
-                  </p>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Time Needed:</span>
-                      <span className="font-medium text-gray-900">{place.timeNeeded}</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Entrance Fee:</span>
-                      <span className="font-medium text-gray-900">{place.entranceFee}</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Weekly Off:</span>
-                      <span className="font-medium text-gray-900">{place.weeklyOff}</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Best Time:</span>
-                      <span className="font-medium text-gray-900">{place.bestTimeToVisit}</span>
-                    </div>
-                  </div>
-                  
-                  <button className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                    Get Directions
-                  </button>
-                </div>
-              </div>
+            {getFilteredPlaces().map((place, index) => (
+              <PlaceCard 
+                key={index} 
+                place={place} 
+                cityName={cityData.city}
+                getPlaceImage={getPlaceImage}
+              />
             ))}
+          </div>
+          
+          {getFilteredPlaces().length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">No attractions found for the selected category.</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Quick Info Section */}
+      <section className="bg-blue-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="bg-blue-600 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Best Time to Visit</h3>
+              <p className="text-gray-600">{cityData.best_time_to_visit}</p>
+            </div>
+            <div className="text-center">
+              <div className="bg-green-600 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Top Rated</h3>
+              <p className="text-gray-600">{cityData.city_average_rating}/5 Average Rating</p>
+            </div>
+            <div className="text-center">
+              <div className="bg-purple-600 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Total Attractions</h3>
+              <p className="text-gray-600">{cityData.places.length} Places to Visit</p>
+            </div>
           </div>
         </div>
       </section>
@@ -410,45 +391,120 @@ export default function CityDetails() {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-2xl font-bold mb-4">
-                Globe<span className="text-blue-400">trotter</span>
-              </h3>
-              <p className="text-gray-400">
-                Your personalized travel planning companion for incredible India.
-              </p>
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-4">
+              Globe<span className="text-blue-400">trotter</span>
+            </h2>
+            <p className="text-gray-400 mb-6">Discover the beauty of India, one city at a time.</p>
+            <div className="flex justify-center space-x-6">
+              <Link href="/" className="text-gray-400 hover:text-white transition-colors">
+                Home
+              </Link>
+              <Link href="/search" className="text-gray-400 hover:text-white transition-colors">
+                Search
+              </Link>
+              <Link href="/profile" className="text-gray-400 hover:text-white transition-colors">
+                Profile
+              </Link>
             </div>
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Platform</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white">How it works</a></li>
-                <li><a href="#" className="hover:text-white">Features</a></li>
-                <li><a href="#" className="hover:text-white">Pricing</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Support</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white">Help Center</a></li>
-                <li><a href="#" className="hover:text-white">Contact Us</a></li>
-                <li><a href="#" className="hover:text-white">Community</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white">About</a></li>
-                <li><a href="#" className="hover:text-white">Blog</a></li>
-                <li><a href="#" className="hover:text-white">Careers</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 Globetrotter. All rights reserved.</p>
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+// Place Card Component
+interface PlaceCardProps {
+  place: Place;
+  cityName: string;
+  getPlaceImage: (placeName: string, cityName: string) => Promise<string>;
+}
+
+function PlaceCard({ place, cityName, getPlaceImage }: PlaceCardProps) {
+  const [imageUrl, setImageUrl] = useState<string>('');
+  const [imageLoading, setImageLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchImage = async () => {
+      try {
+        const url = await getPlaceImage(place.place_name, cityName);
+        setImageUrl(url);
+      } catch (error) {
+        setImageUrl('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
+      } finally {
+        setImageLoading(false);
+      }
+    };
+
+    fetchImage();
+  }, [place.place_name, cityName, getPlaceImage]);
+
+  const formatEntranceFee = (fee: number) => {
+    if (fee === 0) return 'Free';
+    return `₹${fee}`;
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+      <div className="relative h-48">
+        {imageLoading ? (
+          <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
+            <div className="text-gray-400">Loading...</div>
+          </div>
+        ) : (
+          <Image
+            src={imageUrl}
+            alt={place.place_name}
+            fill
+            className="object-cover"
+          />
+        )}
+        <div className="absolute top-4 right-4">
+          <span className="bg-yellow-500 text-black px-2 py-1 rounded-full text-sm font-medium">
+            ⭐ {place.rating}
+          </span>
+        </div>
+        <div className="absolute top-4 left-4">
+          <span className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium">
+            {place.type}
+          </span>
+        </div>
+      </div>
+      
+      <div className="p-6">
+        <h3 className="text-xl font-bold text-gray-900 mb-2">{place.place_name}</h3>
+        <p className="text-gray-600 text-sm mb-4 capitalize">{place.significance}</p>
+        
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-500">Entrance Fee:</span>
+            <span className="font-medium">{formatEntranceFee(place.entrance_fee)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-500">Weekly Off:</span>
+            <span className="font-medium">{place.weekly_off}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-500">Photography:</span>
+            <span className="font-medium">
+              {place.dslr_allowed === 'Yes' ? 
+                <span className="text-green-600">✓ Allowed</span> : 
+                <span className="text-red-600">✗ Not Allowed</span>
+              }
+            </span>
+          </div>
+        </div>
+        
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">Significance</span>
+            <span className="text-sm font-medium capitalize bg-gray-100 px-2 py-1 rounded">
+              {place.significance}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

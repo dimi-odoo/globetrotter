@@ -15,7 +15,7 @@ interface User {
   city: string;
   country: string;
   occupation: string;
-  avatar: string;
+  profilePhoto: string;
   createdAt: string;
 }
 
@@ -121,8 +121,17 @@ export default function ProfilePage() {
     const userData = localStorage.getItem('user');
     if (userData) {
       const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      setFormData(parsedUser);
+      
+      // Transform the user data to match our interface
+      const transformedUser = {
+        ...parsedUser,
+        fullName: parsedUser.fullName || `${parsedUser.firstName || ''} ${parsedUser.lastName || ''}`.trim(),
+        phone: parsedUser.phone || parsedUser.phoneNumber || '',
+        profilePhoto: parsedUser.profilePhoto || parsedUser.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'
+      };
+      
+      setUser(transformedUser);
+      setFormData(transformedUser);
       
       // Fetch trips from API
       fetchTrips();
@@ -227,16 +236,24 @@ export default function ProfilePage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ avatar: newAvatar }),
+        body: JSON.stringify({ profilePhoto: newAvatar }),
       });
 
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
         localStorage.setItem('user', JSON.stringify(data.user));
+        setSaveMessage('Avatar updated successfully!');
+        setTimeout(() => setSaveMessage(null), 3000);
+      } else {
+        console.error('Failed to update avatar');
+        setSaveMessage('Failed to update avatar. Please try again.');
+        setTimeout(() => setSaveMessage(null), 3000);
       }
     } catch (error) {
       console.error('Error updating avatar:', error);
+      setSaveMessage('Error updating avatar. Please try again.');
+      setTimeout(() => setSaveMessage(null), 3000);
     }
   };
 
@@ -392,7 +409,7 @@ export default function ProfilePage() {
                     className="flex items-center text-blue-600 font-medium hover:text-blue-800"
                   >
                     <img
-                      src={user.avatar}
+                      src={user.profilePhoto}
                       alt="Profile"
                       className="w-8 h-8 rounded-full mr-2"
                     />
@@ -459,7 +476,7 @@ export default function ProfilePage() {
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
             <div className="relative">
               <img
-                src={user.avatar}
+                src={user.profilePhoto}
                 alt="Profile"
                 className="w-32 h-32 rounded-full border-4 border-blue-100"
               />
@@ -474,11 +491,11 @@ export default function ProfilePage() {
               </button>
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{user.fullName}</h1>
-              <p className="text-gray-600 mb-4">{user.email}</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{user.fullName || 'User Name'}</h1>
+              <p className="text-gray-600 mb-4">{user.email || 'No email'}</p>
               <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                <span>📍 {user.city}, {user.country}</span>
-                <span>💼 {user.occupation}</span>
+                <span>📍 {user.city || 'Unknown'}, {user.country || 'Unknown'}</span>
+                <span>💼 {user.occupation || 'Not specified'}</span>
                 <span>📅 Member since {formatDate(user.createdAt)}</span>
               </div>
             </div>
@@ -513,15 +530,15 @@ export default function ProfilePage() {
                 )}
               </div>
               <div className="space-y-4">
-                {renderEditableField('fullName', 'Full Name', user.fullName)}
-                {renderEditableField('email', 'Email', user.email, 'email')}
-                {renderEditableField('phone', 'Phone', user.phone, 'tel')}
-                {renderEditableField('dateOfBirth', 'Date of Birth', user.dateOfBirth, 'date')}
-                {renderEditableField('gender', 'Gender', user.gender, 'select')}
-                {renderEditableField('address', 'Address', user.address)}
-                {renderEditableField('city', 'City', user.city)}
-                {renderEditableField('country', 'Country', user.country)}
-                {renderEditableField('occupation', 'Occupation', user.occupation)}
+                {renderEditableField('fullName', 'Full Name', user.fullName || '')}
+                {renderEditableField('email', 'Email', user.email || '', 'email')}
+                {renderEditableField('phone', 'Phone', user.phone || '', 'tel')}
+                {renderEditableField('dateOfBirth', 'Date of Birth', user.dateOfBirth || '', 'date')}
+                {renderEditableField('gender', 'Gender', user.gender || '', 'select')}
+                {renderEditableField('address', 'Address', user.address || '')}
+                {renderEditableField('city', 'City', user.city || '')}
+                {renderEditableField('country', 'Country', user.country || '')}
+                {renderEditableField('occupation', 'Occupation', user.occupation || '')}
               </div>
             </div>
           </div>

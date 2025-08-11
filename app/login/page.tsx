@@ -82,7 +82,7 @@ export default function LoginPage() {
       if (response.ok) {
         // Store user data in localStorage (or use a state management solution)
         localStorage.setItem('user', JSON.stringify(data.user));
-        router.push('/dashboard');
+        router.push('/');
       } else {
         setError(data.error || 'Login failed');
       }
