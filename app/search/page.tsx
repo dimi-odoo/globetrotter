@@ -446,108 +446,109 @@ export default function SearchPage() {
       </nav>
 
       {/* Search Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4">Discover Amazing Destinations & Activities</h1>
-            <p className="text-xl text-blue-100">Find your perfect travel experience</p>
+      <div className="relative bg-cover bg-center bg-no-repeat text-white min-h-[55vh] flex items-center" style={{ backgroundImage: 'url("/Explore_india.png")' }}>
+        <div className="absolute inset-0 bg-black/40 z-10"></div>
+        <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold mb-3">Discover Amazing Destinations & Activities</h1>
+            <p className="text-lg text-blue-100">Find your perfect travel experience</p>
           </div>
+        </div>
+      </div>
 
-          {/* Search Form */}
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-xl p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                {/* Search Type Toggle */}
-                <div className="flex bg-gray-100 rounded-lg p-1">
-                  <button
-                    onClick={() => setSearchType('cities')}
-                    className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-                      searchType === 'cities'
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    🏙️ Cities
-                  </button>
-                  <button
-                    onClick={() => setSearchType('activities')}
-                    className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-                      searchType === 'activities'
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    🎯 Activities
-                  </button>
-                </div>
-
-                {/* Search Input */}
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder={`Search for ${searchType}...`}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full px-4 py-3 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
-                  <svg className="absolute right-3 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-              </div>
-
-              {/* Filters */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                {searchType === 'activities' && (
-                  <select
-                    value={filterCategory}
-                    onChange={(e) => setFilterCategory(e.target.value)}
-                    className="px-4 py-3 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  >
-                    <option value="">All Categories</option>
-                    <option value="Adventure">Adventure</option>
-                    <option value="Cultural">Cultural</option>
-                    <option value="Culinary">Culinary</option>
-                    <option value="Sightseeing">Sightseeing</option>
-                    <option value="Nature">Nature</option>
-                  </select>
-                )}
-
-                {searchType === 'activities' && (
-                  <select
-                    value={priceRange}
-                    onChange={(e) => setPriceRange(e.target.value)}
-                    className="px-4 py-3 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  >
-                    <option value="">Any Price</option>
-                    <option value="0-50">Under $50</option>
-                    <option value="50-100">$50 - $100</option>
-                    <option value="100-200">$100 - $200</option>
-                    <option value="200-1000">$200+</option>
-                  </select>
-                )}
-
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="px-4 py-3 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                >
-                  <option value="relevance">Sort by Relevance</option>
-                  <option value="rating">Highest Rated</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                </select>
-              </div>
-
-              {/* Search Button */}
+      {/* Search Box - moved below hero */}
+      <div className="relative z-20 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
+        <div className="bg-white rounded-xl shadow-xl p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+            {/* Search Type Toggle */}
+            <div className="flex bg-gray-100 rounded-lg p-1">
               <button
-                onClick={handleSearch}
-                className="w-full bg-blue-600 text-white py-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
+                onClick={() => setSearchType('cities')}
+                className={`flex-1 py-1.5 px-3 rounded-md font-medium transition-colors ${
+                  searchType === 'cities'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
               >
-                🔍 Search {searchType}
+                Cities
+              </button>
+              <button
+                onClick={() => setSearchType('activities')}
+                className={`flex-1 py-1.5 px-3 rounded-md font-medium transition-colors ${
+                  searchType === 'activities'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Activities
               </button>
             </div>
+
+            {/* Search Input */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder={`Search for ${searchType}...`}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+              <svg className="absolute right-3 top-3 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
           </div>
+
+          {/* Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+            {searchType === 'activities' && (
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="px-4 py-2 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="">All Categories</option>
+                <option value="Adventure">Adventure</option>
+                <option value="Cultural">Cultural</option>
+                <option value="Culinary">Culinary</option>
+                <option value="Sightseeing">Sightseeing</option>
+                <option value="Nature">Nature</option>
+              </select>
+            )}
+
+            {searchType === 'activities' && (
+              <select
+                value={priceRange}
+                onChange={(e) => setPriceRange(e.target.value)}
+                className="px-4 py-2 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="">Any Price</option>
+                <option value="0-50">Under $50</option>
+                <option value="50-100">$50 - $100</option>
+                <option value="100-200">$100 - $200</option>
+                <option value="200-1000">$200+</option>
+              </select>
+            )}
+
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-2 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            >
+              <option value="relevance">Sort by Relevance</option>
+              <option value="rating">Highest Rated</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+            </select>
+          </div>
+
+          {/* Search Button */}
+          <button
+            onClick={handleSearch}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base"
+          >
+            Search
+          </button>
         </div>
       </div>
 
