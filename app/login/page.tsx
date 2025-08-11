@@ -144,6 +144,20 @@ export default function LoginPage() {
               </p>
             </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
+              <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+                <div className="text-2xl font-bold text-indigo-600 mb-1">150+</div>
+                <div className="text-sm text-gray-600">Destinations</div>
+              </div>
+              <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+                <div className="text-2xl font-bold text-purple-600 mb-1">50k+</div>
+                <div className="text-sm text-gray-600">Travelers</div>
+              </div>
+              <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+                <div className="text-2xl font-bold text-cyan-600 mb-1">4.9★</div>
+                <div className="text-sm text-gray-600">Rating</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -151,7 +165,7 @@ export default function LoginPage() {
         <div className="order-1 lg:order-2">
           <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 lg:p-12 animate-slideIn">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Login</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Sign In</h2>
               <p className="text-gray-600">Access your travel dashboard</p>
             </div>
 
@@ -293,7 +307,6 @@ export default function LoginPage() {
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-200"></div>
                 </div>
-               
               </div>
             </div>
 
