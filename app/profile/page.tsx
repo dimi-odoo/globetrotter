@@ -95,13 +95,13 @@ export default function ProfileDashboardPage() {
     },
   ];
 
-    return (
+  return (
     <div className="relative min-h-screen bg-slate-50">
       {/* decorative background */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-gradient-to-br from-blue-400/20 to-indigo-400/10 blur-3xl" />
         <div className="absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-gradient-to-tr from-teal-300/20 to-emerald-400/10 blur-3xl" />
-                </div>
+      </div>
 
       <div className="mx-auto max-w-7xl px-4 py-6 lg:py-10">
         {/* Top bar */}
@@ -113,22 +113,22 @@ export default function ProfileDashboardPage() {
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
-                  </svg>
+              </svg>
               Back
-          </Link>
+            </Link>
             <div>
               <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Profile</h1>
               <p className="mt-1 text-sm text-slate-600">Manage your travel profile, trips and reviews</p>
-        </div>
-      </div>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             <Link href="#" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M11 11V6h2v5h5v2h-5v5h-2v-5H6v-2h5z"/></svg>
               New Trip
-              </Link>
+            </Link>
             <Link href="#" className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">Edit Profile</Link>
+          </div>
         </div>
-      </div>
 
         {/* Grid layout */}
         <div className="grid grid-cols-12 gap-6">
@@ -141,7 +141,7 @@ export default function ProfileDashboardPage() {
                   <div className="h-16 w-16 overflow-hidden rounded-full ring-2 ring-slate-100">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
-            </div>
+                  </div>
                   <div className="min-w-0">
                     <h2 className="truncate text-lg font-semibold text-slate-900">{displayName}</h2>
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
@@ -153,10 +153,10 @@ export default function ProfileDashboardPage() {
                         <svg className="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="10" r="4"/><path d="M18 20a6 6 0 00-12 0"/></svg>
                         Member since {memberSince}
                       </span>
-          </div>
+                    </div>
                     <p className="mt-2 text-sm text-slate-700">{bio}</p>
-          </div>
-        </div>
+                  </div>
+                </div>
 
                 {/* Socials */}
                 <div className="mt-4 flex items-center gap-3 text-slate-500">
@@ -168,7 +168,7 @@ export default function ProfileDashboardPage() {
                   ].map((icon, i) => (
                     <span key={i} className="cursor-pointer text-slate-400 hover:text-blue-600">{icon}</span>
                   ))}
-                  </div>
+                </div>
 
                 {/* Quick stats */}
                 <div className="mt-5 grid grid-cols-2 gap-3">
@@ -176,8 +176,8 @@ export default function ProfileDashboardPage() {
                   <StatMini label="Trips" value={24} />
                   <StatMini label="Days" value={156} />
                   <StatMini label="Reviews" value={48} />
-            </div>
-          </div>
+                </div>
+              </div>
 
               {/* Navigation */}
               <nav className="rounded-2xl border border-slate-200 bg-white/80 p-2 shadow-sm backdrop-blur">
@@ -199,7 +199,7 @@ export default function ProfileDashboardPage() {
                   </button>
                 ))}
               </nav>
-                </div>
+            </div>
           </aside>
 
           {/* Main content */}
@@ -218,7 +218,7 @@ export default function ProfileDashboardPage() {
               <KpiCard title="Reviews" value="48" accent="from-amber-500 to-orange-500" icon={
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/></svg>
               }/>
-              </div>
+            </div>
 
             {/* Tabs content */}
             {activeTab === "overview" && (
@@ -253,34 +253,34 @@ export default function ProfileDashboardPage() {
                       </li>
                     ))}
                   </ul>
-                              </div>
-                            </div>
+                </div>
+              </div>
             )}
 
             {activeTab === "trips" && (
               <div className="mt-8 space-y-8">
                 <SectionHeader title="All Trips" />
                 <CardGrid trips={[...preplannedTrips, ...previousTrips]} />
-                    </div>
-                  )}
+              </div>
+            )}
 
             {activeTab === "reviews" && (
               <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h3 className="text-base font-semibold text-slate-900">Reviews</h3>
                 <p className="mt-2 text-sm text-slate-600">You have 48 reviews. Review management coming soon.</p>
-                </div>
-              )}
+              </div>
+            )}
 
             {activeTab === "settings" && (
               <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h3 className="text-base font-semibold text-slate-900">Profile Settings</h3>
                 <p className="mt-2 text-sm text-slate-600">Account preferences and privacy controls coming soon.</p>
-                                </div>
-                              )}
+              </div>
+            )}
           </main>
-                              </div>
-                            </div>
-                          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -296,9 +296,9 @@ function KpiCard({ title, value, icon, accent }: { title: string; value: string 
         </div>
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 shadow-inner">
           {icon}
-                          </div>
-                        </div>
-                      </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -317,7 +317,7 @@ function CardGrid({ trips }: { trips: Trip[] }) {
       {trips.map((trip) => (
         <TripCard key={trip.id} trip={trip} />
       ))}
-                    </div>
+    </div>
   );
 }
 
@@ -331,10 +331,10 @@ function TripCard({ trip }: { trip: Trip }) {
           <div className="max-w-[75%]">
             <p className="truncate text-sm font-semibold text-white drop-shadow">{trip.title}</p>
             <p className="mt-0.5 line-clamp-1 text-xs text-slate-200">{trip.location}</p>
-                </div>
-          <span className="rounded-full bg-white/90 px-2 py-0.5 text-xs font-medium text-slate-700 backdrop-blur">{trip.dateRange.split(",")[0]}</span>
-            </div>
           </div>
+          <span className="rounded-full bg-white/90 px-2 py-0.5 text-xs font-medium text-slate-700 backdrop-blur">{trip.dateRange.split(",")[0]}</span>
+        </div>
+      </div>
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3 text-xs text-slate-600">
           <span className="inline-flex items-center gap-1"><svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a3 3 0 00-3 3v12a3 3 0 003 3h14a3 3 0 003-3V7a3 3 0 00-3-3zm1 15a1 1 0 01-1 1H5a1 1 0 01-1-1V10h16v9z"/></svg>{trip.dateRange}</span>
