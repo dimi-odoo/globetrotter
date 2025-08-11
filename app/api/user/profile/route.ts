@@ -41,13 +41,18 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     
     // Remove sensitive fields that shouldn't be updated via this endpoint
-    const { password, _id, createdAt, ...updateData } = body;
+    const { password, _id, createdAt, username, email, ...updateData } = body;
+    
+    // Filter out undefined and null values
+    const cleanUpdateData = Object.fromEntries(
+      Object.entries(updateData).filter(([_, value]) => value !== undefined && value !== null)
+    );
     
     await connectToDatabase();
     const user = await User.findByIdAndUpdate(
       decoded.userId,
-      { $set: updateData },
-      { new: true, runValidators: true }
+      { $set: cleanUpdateData },
+      { new: true, runValidators: false } // Turn off validators for partial updates
     ).select('-password');
     
     if (!user) {

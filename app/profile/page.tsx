@@ -3,29 +3,123 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { defaultAvatars } from "@/lib/defaultAvatars";
 
 // Types
 interface Trip {
-  id: string;
+  _id: string;
   title: string;
-  dateRange: string;
-  location: string;
-  image: string;
+  destination: string;
+  startDate: string;
+  endDate: string;
+  travelers: number;
+  budget: string;
+  interests: string[];
+  status?: 'planned' | 'completed' | 'ongoing';
+  createdAt: string;
+}
+
+interface UserStats {
+  totalTrips: number;
+  completedTrips: number;
+  plannedTrips: number;
+  totalDays: number;
+  countriesVisited: number;
+  reviewsCount: number;
 }
 
 export default function ProfileDashboardPage() {
+  const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [userStats, setUserStats] = useState<UserStats>({
+    totalTrips: 0,
+    completedTrips: 0,
+    plannedTrips: 0,
+    totalDays: 0,
+    countriesVisited: 0,
+    reviewsCount: 0
+  });
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "trips" | "reviews" | "settings">("overview");
 
   useEffect(() => {
+    const initializeProfile = async () => {
+      try {
+        // Get user from localStorage
+        const stored = localStorage.getItem("user");
+        if (!stored) {
+          router.push('/login');
+          return;
+        }
+
+        const userData = JSON.parse(stored);
+        setUser(userData);
+
+        // Check if user is verified
+        if (!userData.isVerified) {
+          router.push(`/verify-otp?email=${encodeURIComponent(userData.email)}`);
+          return;
+        }
+
+        // Fetch user's trips
+        await fetchUserTrips(userData._id);
+      } catch (error) {
+        console.error('Error initializing profile:', error);
+        router.push('/login');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeProfile();
+  }, [router]);
+
+  const fetchUserTrips = async (userId: string) => {
     try {
-      const stored = localStorage.getItem("user");
-      if (stored) setUser(JSON.parse(stored));
-    } catch {
-      // ignore
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/trips', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTrips(data.trips || []);
+        calculateStats(data.trips || []);
+      }
+    } catch (error) {
+      console.error('Error fetching trips:', error);
     }
-  }, []);
+  };
+
+  const calculateStats = (tripsData: Trip[]) => {
+    const now = new Date();
+    const completed = tripsData.filter(trip => new Date(trip.endDate) < now);
+    const planned = tripsData.filter(trip => new Date(trip.startDate) > now);
+    
+    // Calculate total days
+    const totalDays = tripsData.reduce((total, trip) => {
+      const start = new Date(trip.startDate);
+      const end = new Date(trip.endDate);
+      const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      return total + days;
+    }, 0);
+
+    // Count unique destinations (approximation for countries)
+    const uniqueDestinations = new Set(tripsData.map(trip => trip.destination));
+
+    setUserStats({
+      totalTrips: tripsData.length,
+      completedTrips: completed.length,
+      plannedTrips: planned.length,
+      totalDays,
+      countriesVisited: uniqueDestinations.size,
+      reviewsCount: 0 // Will be implemented later
+    });
+  };
 
   const avatarUrl = useMemo(() => {
     return (
@@ -37,63 +131,61 @@ export default function ProfileDashboardPage() {
   }, [user]);
 
   const displayName = useMemo(() => {
-    if (!user) return "Shrey Mehta";
+    if (!user) return "Loading...";
     const first = user.firstName || "";
     const last = user.lastName || "";
     return (first || last) ? `${first} ${last}`.trim() : (user.username || "Traveler");
   }, [user]);
 
-  const location = user?.city && user?.country ? `${user.city}, ${user.country}` : "Bharuch, India";
-  const memberSince = user?.createdAt ? new Date(user.createdAt).getFullYear() : 2025;
-  const bio = user?.description || "Good Man";
+  const location = user?.city && user?.country ? `${user.city}, ${user.country}` : "Location not set";
+  const memberSince = user?.createdAt ? new Date(user.createdAt).getFullYear() : new Date().getFullYear();
+  const bio = user?.description || "No description yet";
 
-  const preplannedTrips: Trip[] = [
-    {
-      id: "paris-adventure",
-      title: "Paris Adventure",
-      dateRange: "Mar 15 - Mar 22, 2024",
-      location: "Paris, France",
-      image: "https://images.unsplash.com/photo-1511735111819-9a3f7709049c?q=80&w=1400&auto=format&fit=crop",
-    },
-    {
-      id: "tokyo-explorer",
-      title: "Tokyo Explorer",
-      dateRange: "Apr 5 - Apr 15, 2024",
-      location: "Tokyo, Japan",
-      image: "https://images.unsplash.com/photo-1504805572947-34fad45aed93?q=80&w=1400&auto=format&fit=crop",
-    },
-    {
-      id: "greek-islands",
-      title: "Greek Islands",
-      dateRange: "May 20 - May 30, 2024",
-      location: "Santorini, Greece",
-      image: "https://images.unsplash.com/photo-1506846547053-0ba0e554624e?q=80&w=1400&auto=format&fit=crop",
-    },
-  ];
+  // Filter trips by status
+  const plannedTrips = trips.filter(trip => {
+    const startDate = new Date(trip.startDate);
+    return startDate > new Date();
+  });
 
-  const previousTrips: Trip[] = [
-    {
-      id: "bali-retreat",
-      title: "Bali Retreat",
-      dateRange: "Dec 10 - Dec 20, 2023",
-      location: "Bali, Indonesia",
-      image: "https://images.unsplash.com/photo-1518544889286-bc53ef7cf0d2?q=80&w=1400&auto=format&fit=crop",
-    },
-    {
-      id: "swiss-alps",
-      title: "Swiss Alps",
-      dateRange: "Nov 5 - Nov 15, 2023",
-      location: "Switzerland",
-      image: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?q=80&w=1400&auto=format&fit=crop",
-    },
-    {
-      id: "maldives-paradise",
-      title: "Maldives Paradise",
-      dateRange: "Oct 1 - Oct 10, 2023",
-      location: "Maldives",
-      image: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=1400&auto=format&fit=crop",
-    },
-  ];
+  const completedTrips = trips.filter(trip => {
+    const endDate = new Date(trip.endDate);
+    return endDate < new Date();
+  });
+
+  const getDestinationImage = (destination: string) => {
+    // Default images for common destinations
+    const destinationImages: { [key: string]: string } = {
+      'paris': 'https://images.unsplash.com/photo-1511735111819-9a3f7709049c?q=80&w=1400&auto=format&fit=crop',
+      'tokyo': 'https://images.unsplash.com/photo-1504805572947-34fad45aed93?q=80&w=1400&auto=format&fit=crop',
+      'new york': 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=1400&auto=format&fit=crop',
+      'london': 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=1400&auto=format&fit=crop',
+      'bali': 'https://images.unsplash.com/photo-1518544889286-bc53ef7cf0d2?q=80&w=1400&auto=format&fit=crop',
+      'dubai': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=1400&auto=format&fit=crop',
+      'maldives': 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=1400&auto=format&fit=crop',
+      'switzerland': 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?q=80&w=1400&auto=format&fit=crop',
+      'greece': 'https://images.unsplash.com/photo-1506846547053-0ba0e554624e?q=80&w=1400&auto=format&fit=crop',
+      'default': 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=1400&auto=format&fit=crop'
+    };
+    
+    const key = destination.toLowerCase();
+    for (const dest in destinationImages) {
+      if (key.includes(dest)) {
+        return destinationImages[dest];
+      }
+    }
+    return destinationImages.default;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-slate-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
     return (
     <div className="relative min-h-screen bg-slate-50">
@@ -122,11 +214,11 @@ export default function ProfileDashboardPage() {
         </div>
       </div>
           <div className="flex items-center gap-3">
-            <Link href="#" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+            <Link href="/plan-trip" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M11 11V6h2v5h5v2h-5v5h-2v-5H6v-2h5z"/></svg>
               New Trip
               </Link>
-            <Link href="#" className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">Edit Profile</Link>
+            <Link href="/edit-profile" className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">Edit Profile</Link>
         </div>
       </div>
 
@@ -247,20 +339,33 @@ export default function ProfileDashboardPage() {
             {/* Tabs content */}
             {activeTab === "overview" && (
               <div className="mt-8 space-y-8">
-                {/* Preplanned */}
-                <SectionHeader title="Preplanned Trips">
-                  <Link href="#" className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:underline">
+                {/* Planned Trips */}
+                <SectionHeader title="Planned Trips">
+                  <Link href="/plan-trip" className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:underline">
                     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M11 11V6h2v5h5v2h-5v5h-2v-5H6v-2h5z"/></svg>
                     Plan New Trip
                   </Link>
                 </SectionHeader>
-                <CardGrid trips={preplannedTrips} />
+                {plannedTrips.length > 0 ? (
+                  <CardGrid trips={plannedTrips} />
+                ) : (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
+                    <p className="text-slate-600">No planned trips yet.</p>
+                    <Link href="/plan-trip" className="mt-2 inline-block text-blue-600 hover:underline">Plan your first trip</Link>
+                  </div>
+                )}
 
-                {/* Previous */}
-                <SectionHeader title="Previous Trips">
-                  <Link href="#" className="text-sm font-medium text-blue-600 hover:underline">View All</Link>
+                {/* Completed Trips */}
+                <SectionHeader title="Completed Trips">
+                  <span className="text-sm text-slate-500">{completedTrips.length} trips</span>
                 </SectionHeader>
-                <CardGrid trips={previousTrips} />
+                {completedTrips.length > 0 ? (
+                  <CardGrid trips={completedTrips.slice(0, 6)} />
+                ) : (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
+                    <p className="text-slate-600">No completed trips yet.</p>
+                  </div>
+                )}
 
                 {/* Activity */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -284,11 +389,16 @@ export default function ProfileDashboardPage() {
             {activeTab === "trips" && (
               <div className="mt-8 space-y-8">
                 <SectionHeader title="All Trips" />
-                <CardGrid trips={[...preplannedTrips, ...previousTrips]} />
-                    </div>
-                  )}
-
-            {activeTab === "reviews" && (
+                {trips.length > 0 ? (
+                  <CardGrid trips={trips} />
+                ) : (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
+                    <p className="text-slate-600">No trips found.</p>
+                    <Link href="/plan-trip" className="mt-2 inline-block text-blue-600 hover:underline">Plan your first trip</Link>
+                  </div>
+                )}
+              </div>
+            )}            {activeTab === "reviews" && (
               <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h3 className="text-base font-semibold text-slate-900">Reviews</h3>
                 <p className="mt-2 text-sm text-slate-600">You have 48 reviews. Review management coming soon.</p>
@@ -339,32 +449,78 @@ function CardGrid({ trips }: { trips: Trip[] }) {
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
       {trips.map((trip) => (
-        <TripCard key={trip.id} trip={trip} />
+        <TripCard key={trip._id} trip={trip} />
       ))}
-                    </div>
+    </div>
   );
-}
+}function TripCard({ trip }: { trip: Trip }) {
+  const formatDateRange = (startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const startFormatted = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const endFormatted = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return `${startFormatted} - ${endFormatted}`;
+  };
 
-function TripCard({ trip }: { trip: Trip }) {
+  const getDestinationImage = (destination: string) => {
+    const destinationImages: { [key: string]: string } = {
+      'paris': 'https://images.unsplash.com/photo-1511735111819-9a3f7709049c?q=80&w=1400&auto=format&fit=crop',
+      'tokyo': 'https://images.unsplash.com/photo-1504805572947-34fad45aed93?q=80&w=1400&auto=format&fit=crop',
+      'new york': 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=1400&auto=format&fit=crop',
+      'london': 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=1400&auto=format&fit=crop',
+      'bali': 'https://images.unsplash.com/photo-1518544889286-bc53ef7cf0d2?q=80&w=1400&auto=format&fit=crop',
+      'dubai': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=1400&auto=format&fit=crop',
+      'maldives': 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=1400&auto=format&fit=crop',
+      'switzerland': 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?q=80&w=1400&auto=format&fit=crop',
+      'greece': 'https://images.unsplash.com/photo-1506846547053-0ba0e554624e?q=80&w=1400&auto=format&fit=crop',
+      'default': 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=1400&auto=format&fit=crop'
+    };
+    
+    const key = destination.toLowerCase();
+    for (const dest in destinationImages) {
+      if (key.includes(dest)) {
+        return destinationImages[dest];
+      }
+    }
+    return destinationImages.default;
+  };
+
   return (
     <div className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
       <div className="relative h-44 w-full">
-        <Image src={trip.image} alt={trip.title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+        <Image 
+          src={getDestinationImage(trip.destination)} 
+          alt={trip.title} 
+          fill 
+          className="object-cover transition-transform duration-500 group-hover:scale-105" 
+        />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
         <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
           <div className="max-w-[75%]">
             <p className="truncate text-sm font-semibold text-white drop-shadow">{trip.title}</p>
-            <p className="mt-0.5 line-clamp-1 text-xs text-slate-200">{trip.location}</p>
-                </div>
-          <span className="rounded-full bg-white/90 px-2 py-0.5 text-xs font-medium text-slate-700 backdrop-blur">{trip.dateRange.split(",")[0]}</span>
-            </div>
+            <p className="mt-0.5 line-clamp-1 text-xs text-slate-200">{trip.destination}</p>
           </div>
+          <span className="rounded-full bg-white/90 px-2 py-0.5 text-xs font-medium text-slate-700 backdrop-blur">
+            {new Date(trip.startDate).getMonth() + 1}/{new Date(trip.startDate).getFullYear()}
+          </span>
+        </div>
+      </div>
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3 text-xs text-slate-600">
-          <span className="inline-flex items-center gap-1"><svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a3 3 0 00-3 3v12a3 3 0 003 3h14a3 3 0 003-3V7a3 3 0 00-3-3zm1 15a1 1 0 01-1 1H5a1 1 0 01-1-1V10h16v9z"/></svg>{trip.dateRange}</span>
-          <span className="inline-flex items-center gap-1"><svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/></svg>{trip.location}</span>
+          <span className="inline-flex items-center gap-1">
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 4h-1V2h-2v2H8V2H6v2H5a3 3 0 00-3 3v12a3 3 0 003 3h14a3 3 0 003-3V7a3 3 0 00-3-3zm1 15a1 1 0 01-1 1H5a1 1 0 01-1-1V10h16v9z"/>
+            </svg>
+            {formatDateRange(trip.startDate, trip.endDate)}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/>
+            </svg>
+            {trip.destination}
+          </span>
         </div>
-        <Link href="#" className="text-xs font-medium text-blue-600 hover:underline">View Details</Link>
+        <Link href={`/trips/${trip._id}`} className="text-xs font-medium text-blue-600 hover:underline">View Details</Link>
       </div>
     </div>
   );
