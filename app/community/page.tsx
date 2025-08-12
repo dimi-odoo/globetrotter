@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -10,6 +10,7 @@ interface User {
   username: string;
   firstName: string;
   email: string;
+  profilePhoto?: string;
 }
 
 interface Comment {
@@ -48,11 +49,27 @@ export default function CommunityPage() {
   const [newPost, setNewPost] = useState({ title: '', content: '', tags: '' });
   const [commentInputs, setCommentInputs] = useState<{ [key: string]: string }>({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
     checkAuth();
     fetchPosts(1);
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const checkAuth = () => {
@@ -65,6 +82,14 @@ export default function CommunityPage() {
     }
     
     setUser(JSON.parse(userData));
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setIsProfileDropdownOpen(false);
+    router.push('/');
   };
 
   const fetchPosts = async (page: number) => {
@@ -253,14 +278,71 @@ export default function CommunityPage() {
               >
                 Community
               </Link>
-              {user && (
-                <>
+              {user ? (
+                <div className="flex items-center space-x-4">
                   <span className="text-gray-600">Welcome, {user.firstName}!</span>
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                      className="flex items-center bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors font-medium"
+                    >
+                      {user.profilePhoto ? (
+                        <img
+                          src={user.profilePhoto}
+                          alt="Profile"
+                          className="w-6 h-6 rounded-full mr-2 object-cover"
+                        />
+                      ) : (
+                        <div className="w-6 h-6 bg-white text-blue-600 rounded-full mr-2 flex items-center justify-center text-sm font-bold">
+                          {user.firstName?.charAt(0).toUpperCase() || user.username?.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      Profile
+                      <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {isProfileDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border">
+                        <Link
+                          href="/profile"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                        >
+                          View Profile
+                        </Link>
+                        <Link
+                          href="/my-trips"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                        >
+                          My Trips
+                        </Link>
+                        <hr className="my-1" />
+                        <button
+                          onClick={handleLogout}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <>
                   <Link
-                    href="/my-trips"
+                    href="/login"
                     className="text-gray-600 hover:text-gray-900 font-medium"
                   >
-                    My Trips
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    Get Started
                   </Link>
                 </>
               )}
@@ -534,8 +616,8 @@ export default function CommunityPage() {
 
       {/* Create Post Modal */}
       {showCreatePost && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-3xl font-bold text-gray-900">Create New Post</h2>
               <button
@@ -554,7 +636,7 @@ export default function CommunityPage() {
                   type="text"
                   value={newPost.title}
                   onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                  className="w-full px-4 text-gray-700 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
                   placeholder="Enter post title..."
                   maxLength={200}
                   required
@@ -567,7 +649,7 @@ export default function CommunityPage() {
                 <textarea
                   value={newPost.content}
                   onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full text-gray-700 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows={8}
                   placeholder="Share your travel story, tips, or ask questions..."
                   maxLength={2000}
@@ -582,7 +664,7 @@ export default function CommunityPage() {
                   type="text"
                   value={newPost.tags}
                   onChange={(e) => setNewPost({ ...newPost, tags: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 text-gray-700 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="travel, tips, backpacking (comma separated)"
                 />
               </div>
