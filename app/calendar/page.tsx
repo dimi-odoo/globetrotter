@@ -398,19 +398,15 @@ export default function ImprovedCalendar() {
               </div>
               <p className="text-gray-600">View and manage your planned adventures</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/profile" className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 flex items-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                <User className="w-4 h-4 mr-2" />
-                My Profile
-              </Link>
-                              <button 
-                  onClick={handlePlanNewTrip}
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-200 flex items-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Plan New Trip
-                </button>
-            </div>
+                         <div className="flex items-center space-x-4">
+               <button 
+                   onClick={handlePlanNewTrip}
+                   className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-200 flex items-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                 >
+                   <Plus className="w-4 h-4 mr-2" />
+                   Plan New Trip
+                 </button>
+             </div>
           </div>
         </div>
       </div>
