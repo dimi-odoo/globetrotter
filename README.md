@@ -7,6 +7,8 @@
 ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-06B6D4?style=for-the-badge&logo=tailwindcss)
 
+**Demo Video Link**: https://drive.google.com/file/d/1o4OzuvVNy5OrMIcahUU6BsvqL5rQFrPX/view?usp=sharing
+
 ## ✨ Features
 
 ### 🤖 AI-Powered Trip Planning
