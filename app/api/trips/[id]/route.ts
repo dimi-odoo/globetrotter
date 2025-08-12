@@ -33,17 +33,36 @@ export async function GET(
     await dbConnect();
     
     const userId = getUserIdFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const trip = await Trip.findOne({ _id: params.id, userId });
+    
+    // Find the trip
+    const trip = await Trip.findById(params.id);
     
     if (!trip) {
       return NextResponse.json({ error: 'Trip not found' }, { status: 404 });
     }
     
-    return NextResponse.json(trip);
+    // For now, only allow owners to view trips (can be expanded later for public trips)
+    if (!userId || trip.userId !== userId) {
+      return NextResponse.json({ error: 'Trip not found' }, { status: 404 });
+    }
+    
+    // Create a mock author object (can be enhanced to fetch real user data)
+    const response = {
+      ...trip.toObject(),
+      title: trip.destination, // Use destination as title for now
+      author: {
+        _id: trip.userId,
+        username: 'user' + trip.userId.slice(-4),
+        firstName: 'User',
+        lastName: 'Name',
+        email: 'user@example.com'
+      },
+      likes: [],
+      savedBy: [],
+      isPublic: false
+    };
+    
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error fetching trip:', error);
     return NextResponse.json({ error: 'Failed to fetch trip' }, { status: 500 });

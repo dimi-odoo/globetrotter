@@ -365,7 +365,7 @@ export default function EditProfilePage() {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  className={`w-full px-3 text-gray-700 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     errors.firstName ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Enter your first name"
@@ -383,7 +383,7 @@ export default function EditProfilePage() {
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  className={`w-full px-3 py-2 text-gray-700 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     errors.lastName ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Enter your last name"
@@ -401,7 +401,7 @@ export default function EditProfilePage() {
                   name="phoneNumber"
                   value={formData.phoneNumber}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  className={`w-full px-3 text-gray-700 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     errors.phoneNumber ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Enter your phone number"
@@ -419,7 +419,7 @@ export default function EditProfilePage() {
                   name="dateOfBirth"
                   value={formData.dateOfBirth}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 text-gray-700 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
@@ -432,7 +432,7 @@ export default function EditProfilePage() {
                   name="gender"
                   value={formData.gender}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-gray-700 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select gender</option>
                   <option value="male">Male</option>
@@ -452,7 +452,7 @@ export default function EditProfilePage() {
                   name="occupation"
                   value={formData.occupation}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  className={`w-full px-3 text-gray-700 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     errors.occupation ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Enter your occupation"
@@ -476,7 +476,7 @@ export default function EditProfilePage() {
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  className={`w-full px-3 py-2 text-gray-700 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     errors.address ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Enter your full address"
@@ -494,7 +494,7 @@ export default function EditProfilePage() {
                   name="city"
                   value={formData.city}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  className={`w-full px-3 text-gray-700 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     errors.city ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Enter your city"
@@ -512,7 +512,7 @@ export default function EditProfilePage() {
                   name="country"
                   value={formData.country}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  className={`w-full px-3 text-gray-700 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     errors.country ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Enter your country"
@@ -535,7 +535,7 @@ export default function EditProfilePage() {
                 rows={4}
                 value={formData.description}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                className={`w-full px-3 text-gray-700 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                   errors.description ? 'border-red-300' : 'border-gray-300'
                 }`}
                 placeholder="Tell us about yourself, your travel interests, and what makes you excited about exploring the world..."

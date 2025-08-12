@@ -659,12 +659,18 @@ export default function ImprovedCalendar() {
               </div>
               
               <div className="mt-6 flex space-x-3">
-                <button className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all">
+                <Link 
+                  href={`/trip-details/${selectedTrip.id}`}
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all text-center"
+                >
                   View Details
-                </button>
-                <button className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all">
+                </Link>
+                <Link 
+                  href={`/edit-trip/${selectedTrip.id}`}
+                  className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all text-center"
+                >
                   Edit Trip
-                </button>
+                </Link>
               </div>
             </div>
           </div>
