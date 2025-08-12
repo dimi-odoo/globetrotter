@@ -446,16 +446,16 @@ function PlaceCard({ place, cityName, getPlaceImage }: PlaceCardProps) {
         
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-gray-500">Entrance Fee:</span>
-            <span className="font-medium">{formatEntranceFee(place.entrance_fee)}</span>
+            <span className="text-blue-500 ">Entrance Fee:</span>
+            <span className="font-medium text-gray-500">{formatEntranceFee(place.entrance_fee)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500">Weekly Off:</span>
-            <span className="font-medium">{place.weekly_off}</span>
+            <span className="font-medium text-gray-500">{place.weekly_off}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500">Photography:</span>
-            <span className="font-medium">
+            <span className="font-medium text-gray-500">
               {place.dslr_allowed === 'Yes' ? 
                 <span className="text-green-600">✓ Allowed</span> : 
                 <span className="text-red-600">✗ Not Allowed</span>
