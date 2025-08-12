@@ -42,6 +42,8 @@ export default function ImprovedCalendar() {
   const [selectedView, setSelectedView] = useState<'month' | 'week'>('month');
   const [selectedTrip, setSelectedTrip] = useState<CalendarEvent | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     checkAuth();
@@ -66,6 +68,20 @@ export default function ImprovedCalendar() {
     setCalendarEvents(events);
   }, [trips]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const checkAuth = () => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
@@ -76,6 +92,14 @@ export default function ImprovedCalendar() {
     }
     
     setUser(JSON.parse(userData));
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setIsProfileDropdownOpen(false);
+    router.push('/');
   };
 
   const fetchTrips = async () => {
@@ -256,7 +280,109 @@ export default function ImprovedCalendar() {
   const monthDays = getDaysInMonth(currentDate);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gray-50">
+      {/* Navigation */}
+      <nav className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center">
+              <Link href="/" className="text-2xl font-bold text-gray-900">
+                Globe<span className="text-blue-600">trotter</span>
+              </Link>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/plan-trip"
+                className="text-gray-600 hover:text-gray-900 font-medium"
+              >
+                Plan Trip
+              </Link>
+              <Link
+                href="/community"
+                className="text-gray-600 hover:text-gray-900 font-medium"
+              >
+                Community
+              </Link>
+              <Link
+                href="/calendar"
+                className="text-blue-600 font-medium"
+              >
+                Calendar
+              </Link>
+              {user ? (
+                <div className="flex items-center space-x-4">
+                  <span className="text-gray-600">Welcome, {user.firstName}!</span>
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                      className="flex items-center bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors font-medium"
+                    >
+                      {user.profilePhoto ? (
+                        <img
+                          src={user.profilePhoto}
+                          alt="Profile"
+                          className="w-6 h-6 rounded-full mr-2 object-cover"
+                        />
+                      ) : (
+                        <div className="w-6 h-6 bg-white text-blue-600 rounded-full mr-2 flex items-center justify-center text-sm font-bold">
+                          {user.firstName?.charAt(0).toUpperCase() || user.username?.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      Profile
+                      <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {isProfileDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border">
+                        <Link
+                          href="/profile"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                        >
+                          View Profile
+                        </Link>
+                        <Link
+                          href="/my-trips"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                        >
+                          My Trips
+                        </Link>
+                        <hr className="my-1" />
+                        <button
+                          onClick={handleLogout}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="text-gray-600 hover:text-gray-900 font-medium"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    Get Started
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
       <div className="bg-white/70 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-8">
@@ -544,6 +670,7 @@ export default function ImprovedCalendar() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
