@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Calendar, MapPin, Users, DollarSign, Clock, User, Star, ArrowLeft, Edit3, Share2, Download, Heart, MessageCircle } from 'lucide-react';
+import { Calendar, MapPin, Users, DollarSign, Clock, User, Star, ArrowLeft, Edit3, Share2, Download, Heart, MessageCircle, ChevronDown } from 'lucide-react';
 
 interface User {
   _id: string;
@@ -15,43 +15,40 @@ interface User {
   profilePhoto?: string;
 }
 
-interface ItineraryItem {
-  _id: string;
+interface ActivityItem {
+  name: string;
+  type: string;
+  timeSlot: string;
+  duration: string;
+  cost: string;
+  notes: string;
+}
+
+interface ItineraryDay {
   day: number;
-  time: string;
-  activity: string;
-  location: string;
-  description?: string;
-  cost?: number;
-  duration?: string;
-  notes?: string;
+  activities: ActivityItem[];
 }
 
 interface Trip {
   _id: string;
-  title: string;
+  userId: string;
   destination: string;
+  state: string;
   startDate: string;
   endDate: string;
   travelers: number;
   budget: string;
   interests: string[];
-  itinerary: ItineraryItem[];
+  status: 'upcoming' | 'ongoing' | 'completed';
+  image: string;
+  duration: number;
+  totalCost: string;
+  highlights: string[];
+  itinerary: ItineraryDay[];
+  notes: string;
+  aiGeneratedPlan: string;
   createdAt: string;
   updatedAt: string;
-  status: 'draft' | 'confirmed' | 'completed';
-  author: User;
-  description?: string;
-  totalCost?: number;
-  accommodations?: string[];
-  transportation?: string[];
-  notes?: string;
-  photos?: string[];
-  rating?: number;
-  reviews?: any[];
-  isPublic: boolean;
-  likes: string[];
-  savedBy: string[];
 }
 
 export default function TripDetailsPage() {
@@ -64,9 +61,11 @@ export default function TripDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [expandedDay, setExpandedDay] = useState<number | null>(null);
+  const [destinationImage, setDestinationImage] = useState<string>('');
+  const [activityImages, setActivityImages] = useState<{[key: string]: string}>({});
+  const [loadingImages, setLoadingImages] = useState<{[key: string]: boolean}>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -122,11 +121,8 @@ export default function TripDetailsPage() {
         const tripData = await response.json();
         setTrip(tripData);
         
-        // Check if user has liked or saved this trip
-        if (user) {
-          setIsLiked(tripData.likes?.includes(user._id) || false);
-          setIsSaved(tripData.savedBy?.includes(user._id) || false);
-        }
+        // Fetch destination image from Google Places API
+        await fetchDestinationImage(tripData.destination, tripData.state);
       } else if (response.status === 404) {
         setError('Trip not found');
       } else {
@@ -140,58 +136,41 @@ export default function TripDetailsPage() {
     }
   };
 
-  const toggleLike = async () => {
-    if (!user || !trip) return;
-    
+  // Function to fetch destination image from Google Places API
+  const fetchDestinationImage = async (destination: string, state: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/trips/${trip._id}/like`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
+      const searchQuery = `${destination} ${state} tourism India`;
+      const response = await fetch(`/api/places-image?place=${encodeURIComponent(searchQuery)}`);
+      
       if (response.ok) {
         const data = await response.json();
-        setIsLiked(data.isLiked);
-        setTrip(prev => prev ? {
-          ...prev,
-          likes: data.isLiked 
-            ? [...(prev.likes || []), user._id]
-            : (prev.likes || []).filter(id => id !== user._id)
-        } : null);
+        if (data.imageUrl) {
+          setDestinationImage(data.imageUrl);
+        }
       }
     } catch (error) {
-      console.error('Error toggling like:', error);
+      console.error('Error fetching destination image:', error);
     }
   };
 
-  const toggleSave = async () => {
-    if (!user || !trip) return;
-    
+  // Function to fetch activity image from Google Places API
+  const fetchActivityImage = async (activityName: string, destination: string): Promise<string> => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/trips/${trip._id}/save`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
+      const searchQuery = `${activityName} ${destination}`;
+      const response = await fetch(`/api/places-image?place=${encodeURIComponent(searchQuery)}`);
+      
       if (response.ok) {
         const data = await response.json();
-        setIsSaved(data.isSaved);
-        setTrip(prev => prev ? {
-          ...prev,
-          savedBy: data.isSaved 
-            ? [...(prev.savedBy || []), user._id]
-            : (prev.savedBy || []).filter(id => id !== user._id)
-        } : null);
+        if (data.imageUrl) {
+          return data.imageUrl;
+        }
       }
     } catch (error) {
-      console.error('Error toggling save:', error);
+      console.error('Error fetching activity image:', error);
     }
+    
+    // Return fallback image for activities
+    return "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
   };
 
   const formatDate = (dateString: string) => {
@@ -222,13 +201,42 @@ export default function TripDetailsPage() {
     const url = window.location.href;
     if (navigator.share) {
       navigator.share({
-        title: trip?.title,
+        title: `Trip to ${trip?.destination}`,
         text: `Check out this amazing trip to ${trip?.destination}!`,
         url: url,
       });
     } else {
       navigator.clipboard.writeText(url);
       alert('Link copied to clipboard!');
+    }
+  };
+
+  const toggleDayExpansion = async (dayNumber: number) => {
+    const newExpandedDay = expandedDay === dayNumber ? null : dayNumber;
+    setExpandedDay(newExpandedDay);
+    
+    // Load activity images when expanding a day
+    if (newExpandedDay !== null && trip) {
+      const dayData = trip.itinerary.find(day => day.day === dayNumber);
+      if (dayData) {
+        for (const activity of dayData.activities) {
+          const imageKey = `${dayNumber}-${activity.name}`;
+          if (!activityImages[imageKey] && !loadingImages[imageKey]) {
+            setLoadingImages(prev => ({ ...prev, [imageKey]: true }));
+            try {
+              const imageUrl = await fetchActivityImage(activity.name, trip.destination);
+              setActivityImages(prev => ({
+                ...prev,
+                [imageKey]: imageUrl
+              }));
+            } catch (error) {
+              console.error('Error loading activity image:', error);
+            } finally {
+              setLoadingImages(prev => ({ ...prev, [imageKey]: false }));
+            }
+          }
+        }
+      }
     }
   };
 
@@ -367,9 +375,17 @@ export default function TripDetailsPage() {
       {/* Hero Section */}
       <section className="relative h-96 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-black/30 z-10"></div>
+        {!destinationImage && (
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-100 to-purple-100 flex items-center justify-center z-5">
+            <div className="text-center text-blue-600">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+              <p className="text-sm">Loading destination image...</p>
+            </div>
+          </div>
+        )}
         <Image
-          src={trip.photos?.[0] || `/destinations/${trip.destination.toLowerCase()}.jpg`}
-          alt={trip.destination}
+          src={destinationImage || trip.image || `/destinations/${trip.destination.toLowerCase()}.jpg`}
+          alt={`${trip.destination}, ${trip.state}`}
           fill
           className="object-cover object-center"
           priority
@@ -390,7 +406,7 @@ export default function TripDetailsPage() {
               </button>
               <div className="flex-1">
                 <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg">
-                  {trip.title}
+                  {trip.destination}
                 </h1>
                 <div className="flex flex-wrap items-center gap-4 text-white/90">
                   <div className="flex items-center">
@@ -405,6 +421,11 @@ export default function TripDetailsPage() {
                     <Clock className="w-5 h-5 mr-2" />
                     <span>{calculateDuration()} days</span>
                   </div>
+                  {destinationImage && (
+                    <div className="flex items-center text-xs bg-white/20 px-2 py-1 rounded-full backdrop-blur-sm">
+                      <span>📸 Google Places</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -433,40 +454,14 @@ export default function TripDetailsPage() {
                 <p className="text-xl font-bold text-gray-900 capitalize">{trip.status}</p>
               </div>
               <div className="text-center p-4 bg-orange-50 rounded-xl">
-                <Heart className="w-8 h-8 text-orange-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">Likes</p>
-                <p className="text-xl font-bold text-gray-900">{trip.likes?.length || 0}</p>
+                <Calendar className="w-8 h-8 text-orange-600 mx-auto mb-2" />
+                <p className="text-sm text-gray-600">Duration</p>
+                <p className="text-xl font-bold text-gray-900">{calculateDuration()} days</p>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap gap-4 justify-center">
-              {user && (
-                <>
-                  <button
-                    onClick={toggleLike}
-                    className={`flex items-center px-6 py-3 rounded-lg font-medium transition-colors ${
-                      isLiked 
-                        ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    <Heart className={`w-5 h-5 mr-2 ${isLiked ? 'fill-current' : ''}`} />
-                    {isLiked ? 'Liked' : 'Like'}
-                  </button>
-                  <button
-                    onClick={toggleSave}
-                    className={`flex items-center px-6 py-3 rounded-lg font-medium transition-colors ${
-                      isSaved 
-                        ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    <Download className={`w-5 h-5 mr-2 ${isSaved ? 'fill-current' : ''}`} />
-                    {isSaved ? 'Saved' : 'Save'}
-                  </button>
-                </>
-              )}
+            <div className="flex justify-center">
               <button
                 onClick={shareTrip}
                 className="flex items-center px-6 py-3 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg font-medium transition-colors"
@@ -474,10 +469,10 @@ export default function TripDetailsPage() {
                 <Share2 className="w-5 h-5 mr-2" />
                 Share
               </button>
-              {user && user._id === trip.author._id && (
+              {user && user._id === trip.userId && (
                 <Link
                   href={`/edit-trip/${trip._id}`}
-                  className="flex items-center px-6 py-3 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition-colors"
+                  className="flex items-center px-6 py-3 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition-colors ml-4"
                 >
                   <Edit3 className="w-5 h-5 mr-2" />
                   Edit Trip
@@ -489,11 +484,11 @@ export default function TripDetailsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-8">
-              {/* Trip Description */}
-              {trip.description && (
+              {/* Trip Notes */}
+              {trip.notes && (
                 <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">About This Trip</h2>
-                  <p className="text-gray-700 leading-relaxed">{trip.description}</p>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Trip Notes</h2>
+                  <p className="text-gray-700 leading-relaxed">{trip.notes}</p>
                 </div>
               )}
 
@@ -507,56 +502,107 @@ export default function TripDetailsPage() {
                         key={index}
                         className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full font-medium"
                       >
-                        #{interest}
+                        {interest}
                       </span>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Itinerary */}
+              {/* Day-wise Itinerary */}
               {trip.itinerary && trip.itinerary.length > 0 && (
                 <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Detailed Itinerary</h2>
-                  <div className="space-y-6">
-                    {trip.itinerary.map((item, index) => (
-                      <div key={item._id || index} className="border-l-4 border-blue-500 pl-6 relative">
-                        <div className="absolute w-3 h-3 bg-blue-500 rounded-full -left-2 top-1"></div>
-                        <div className="bg-gray-50 rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-semibold text-gray-900">Day {item.day}</h3>
-                            {item.time && (
-                              <span className="text-sm text-gray-500">{item.time}</span>
-                            )}
-                          </div>
-                          <h4 className="font-medium text-blue-600 mb-1">{item.activity}</h4>
-                          <div className="flex items-center text-gray-600 text-sm mb-2">
-                            <MapPin className="w-4 h-4 mr-1" />
-                            <span>{item.location}</span>
-                          </div>
-                          {item.description && (
-                            <p className="text-gray-700 text-sm mb-2">{item.description}</p>
-                          )}
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            {item.duration && (
-                              <div className="flex items-center">
-                                <Clock className="w-4 h-4 mr-1" />
-                                <span>{item.duration}</span>
-                              </div>
-                            )}
-                            {item.cost && (
-                              <div className="flex items-center">
-                                <DollarSign className="w-4 h-4 mr-1" />
-                                <span>{item.cost}</span>
-                              </div>
-                            )}
-                          </div>
-                          {item.notes && (
-                            <div className="mt-2 p-2 bg-yellow-50 border-l-2 border-yellow-200">
-                              <p className="text-sm text-gray-700"><strong>Note:</strong> {item.notes}</p>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Day-wise Itinerary</h2>
+                  <div className="space-y-4">
+                    {trip.itinerary.map((dayItem, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
+                        <button
+                          onClick={() => toggleDayExpansion(dayItem.day)}
+                          className="w-full px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between"
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                              Day {dayItem.day}
                             </div>
-                          )}
-                        </div>
+                            <span className="font-medium text-gray-900">
+                              {dayItem.activities.length} activities planned
+                            </span>
+                          </div>
+                          <ChevronDown 
+                            className={`w-5 h-5 text-gray-500 transition-transform ${
+                              expandedDay === dayItem.day ? 'transform rotate-180' : ''
+                            }`} 
+                          />
+                        </button>
+                        
+                        {expandedDay === dayItem.day && (
+                          <div className="px-6 py-4 space-y-4">
+                            {dayItem.activities.map((activity, actIndex) => {
+                              const imageKey = `${dayItem.day}-${activity.name}`;
+                              const activityImage = activityImages[imageKey];
+                              const isLoadingImage = loadingImages[imageKey];
+                              
+                              return (
+                                <div key={actIndex} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                  <div className="flex gap-4">
+                                    {/* Activity Image */}
+                                    <div className="flex-shrink-0">
+                                      <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden">
+                                        {isLoadingImage ? (
+                                          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                                          </div>
+                                        ) : activityImage ? (
+                                          <Image
+                                            src={activityImage}
+                                            alt={activity.name}
+                                            width={80}
+                                            height={80}
+                                            className="object-cover w-full h-full"
+                                            onError={(e) => {
+                                              const target = e.target as HTMLImageElement;
+                                              target.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=80&q=80";
+                                            }}
+                                          />
+                                        ) : (
+                                          <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                                            <MapPin className="w-6 h-6 text-blue-600" />
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Activity Details */}
+                                    <div className="flex-1">
+                                      <div className="flex items-start justify-between mb-2">
+                                        <div>
+                                          <h5 className="font-semibold text-gray-900">{activity.name}</h5>
+                                          <p className="text-sm text-gray-600">{activity.timeSlot}</p>
+                                        </div>
+                                        <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium">
+                                          {activity.type}
+                                        </span>
+                                      </div>
+                                      {activity.notes && (
+                                        <p className="text-gray-700 text-sm mb-2">{activity.notes}</p>
+                                      )}
+                                      <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                                        <span className="flex items-center">
+                                          <Clock className="w-4 h-4 mr-1" />
+                                          {activity.duration}
+                                        </span>
+                                        <span className="flex items-center">
+                                          <DollarSign className="w-4 h-4 mr-1" />
+                                          {activity.cost}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -566,41 +612,7 @@ export default function TripDetailsPage() {
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Trip Creator */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Trip Creator</h3>
-                <div className="flex items-center space-x-3">
-                  {trip.author.profilePhoto ? (
-                    <img
-                      src={trip.author.profilePhoto}
-                      alt={trip.author.firstName}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-                      {trip.author.firstName?.charAt(0).toUpperCase() || trip.author.username?.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div>
-                    <p className="font-semibold text-gray-900">
-                      {trip.author.firstName} {trip.author.lastName}
-                    </p>
-                    <p className="text-sm text-gray-500">@{trip.author.username}</p>
-                  </div>
-                </div>
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-sm text-gray-600">
-                    Created: {formatDate(trip.createdAt)}
-                  </p>
-                  {trip.updatedAt !== trip.createdAt && (
-                    <p className="text-sm text-gray-600">
-                      Last updated: {formatDate(trip.updatedAt)}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Trip Stats */}
+              {/* Trip Statistics */}
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Trip Statistics</h3>
                 <div className="space-y-3">
@@ -622,56 +634,90 @@ export default function TripDetailsPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Budget</span>
-                    <span className="font-medium">{trip.budget}</span>
+                    <span className="font-medium capitalize">{trip.budget}</span>
                   </div>
                   {trip.totalCost && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Total Cost</span>
-                      <span className="font-medium">${trip.totalCost}</span>
+                      <span className="font-medium">{trip.totalCost}</span>
                     </div>
                   )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Status</span>
+                    <span className={`font-medium capitalize px-2 py-1 rounded-full text-xs ${
+                      trip.status === 'upcoming' ? 'bg-blue-100 text-blue-800' :
+                      trip.status === 'ongoing' ? 'bg-green-100 text-green-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {trip.status}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Additional Info */}
-              {(trip.accommodations || trip.transportation || trip.notes) && (
+              {/* Trip Highlights */}
+              {trip.highlights && trip.highlights.length > 0 && (
                 <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Information</h3>
-                  
-                  {trip.accommodations && trip.accommodations.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="font-medium text-gray-900 mb-2">Accommodations</h4>
-                      <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-                        {trip.accommodations.map((accommodation, index) => (
-                          <li key={index}>{accommodation}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  
-                  {trip.transportation && trip.transportation.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="font-medium text-gray-900 mb-2">Transportation</h4>
-                      <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-                        {trip.transportation.map((transport, index) => (
-                          <li key={index}>{transport}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  
-                  {trip.notes && (
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-2">Notes</h4>
-                      <p className="text-sm text-gray-600">{trip.notes}</p>
-                    </div>
-                  )}
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Trip Highlights</h3>
+                  <ul className="space-y-2">
+                    {trip.highlights.map((highlight, index) => (
+                      <li key={index} className="flex items-start space-x-2">
+                        <Star className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-700 text-sm">{highlight}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
+
+              {/* Additional Trip Info */}
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Trip Information</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Created</span>
+                    <span className="font-medium">{formatShortDate(trip.createdAt)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Last Updated</span>
+                    <span className="font-medium">{formatShortDate(trip.updatedAt)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Total Activities</span>
+                    <span className="font-medium">
+                      {trip.itinerary?.reduce((total, day) => total + day.activities.length, 0) || 0}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Share Trip</h3>
+            <p className="text-gray-600 mb-4">Share this trip with friends and family</p>
+            <div className="flex space-x-3">
+              <button
+                onClick={shareTrip}
+                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Share
+              </button>
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
