@@ -9,9 +9,10 @@ export default function ForgotPasswordPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [success, setSuccess] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState('');
+  const [resetToken, setResetToken] = useState('');
 
   useEffect(() => {
     setMounted(true);
@@ -21,19 +22,32 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setSuccess('');
+    setSuccess(false);
+    setResetToken('');
 
     try {
-      // Simulate API call for password reset
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      console.log('Response:', { status: response.status, data }); // Add this line
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send reset email');
+      }
+
+      setSuccess(true);
       
-      // For demo purposes, always show success
-      setSuccess('Password reset link has been sent to your email address.');
-      
-      // Auto-hide success message after 5 seconds
-      setTimeout(() => setSuccess(''), 5000);
+      // If SMTP is not configured, show the token for testing
+      if (data.token) {
+        setResetToken(data.token);
+      }
     } catch (err) {
-      setError('Failed to send reset email. Please try again.');
+      console.error('Detailed error:', err); // Add this line
+      setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -78,54 +92,77 @@ export default function ForgotPasswordPage() {
             </div>
           )}
 
-          {success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-green-500" />
-              <p className="text-green-600">{success}</p>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email Field */}
-            <div className="space-y-2">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email Address
-              </label>
-              <div className="relative group">
-                <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 placeholder:text-gray-400"
-                  placeholder="Enter your email address"
-                  suppressHydrationWarning={true}
-                />
+          {success ? (
+            <div className="text-center mb-4">
+              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                <p className="text-green-600">Reset instructions sent! Check your email.</p>
               </div>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:from-indigo-700 hover:to-blue-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl group"
-            >
-              {loading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Sending Reset Link...
-                </div>
-              ) : (
-                <div className="flex items-center justify-center gap-2">
-                  Send Reset Link
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              
+              {/* Show reset token for testing if SMTP is not configured */}
+              {resetToken && (
+                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <p className="text-blue-600 text-sm mb-2">SMTP not configured. Use this token for testing:</p>
+                  <p className="text-xs bg-blue-100 p-2 rounded break-all font-mono">{resetToken}</p>
+                  <Link 
+                    href={`/reset-password?token=${resetToken}`}
+                    className="inline-block mt-2 text-blue-600 hover:text-blue-700 text-sm"
+                  >
+                    Click here to reset password
+                  </Link>
                 </div>
               )}
-            </button>
-          </form>
+              
+              <Link 
+                href="/login"
+                className="text-blue-600 hover:text-blue-700"
+              >
+                Return to login
+              </Link>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Email Field */}
+              <div className="space-y-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Email Address
+                </label>
+                <div className="relative group">
+                  <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-10 text-black pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 placeholder:text-gray-400"
+                    placeholder="Enter your email address"
+                    suppressHydrationWarning={true}
+                  />
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:from-indigo-700 hover:to-blue-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl group"
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Sending Reset Link...
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2">
+                    Send Reset Link
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                )}
+              </button>
+            </form>
+          )}
 
           {/* Back to Login Link */}
           <div className="text-center mt-8 pt-6 border-t border-gray-100">

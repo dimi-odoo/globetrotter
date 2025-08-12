@@ -22,6 +22,8 @@ export interface IUser {
   isVerified?: boolean;
   verificationOTP?: string;
   otpExpiry?: Date;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -118,6 +120,14 @@ const userSchema = new mongoose.Schema<IUser>({
   otpExpiry: {
     type: Date,
     required: false
+  },
+  resetPasswordToken: {
+    type: String,
+    default: null
+  },
+  resetPasswordExpires: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true,
