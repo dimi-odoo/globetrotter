@@ -3,20 +3,29 @@
 import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Calendar, MapPin, Users, DollarSign, Clock, Plus, ExternalLink, User } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 interface Trip {
   _id: string;
-  title: string;
+  userId: string;
   destination: string;
+  state: string;
   startDate: string;
   endDate: string;
   travelers: number;
   budget: string;
   interests: string[];
+  status: 'upcoming' | 'ongoing' | 'completed';
+  image: string;
+  duration: number;
+  totalCost: string;
+  highlights: string[];
   itinerary: any[];
+  notes: string;
+  aiGeneratedPlan: string;
   createdAt: string;
-  status: 'draft' | 'confirmed' | 'completed';
+  updatedAt: string;
 }
 
 interface CalendarEvent {
@@ -40,9 +49,11 @@ export default function ImprovedCalendar() {
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedView, setSelectedView] = useState<'month' | 'week'>('month');
-  const [selectedTrip, setSelectedTrip] = useState<CalendarEvent | null>(null);
+  const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [tripImages, setTripImages] = useState<{[key: string]: string}>({});
+  const [loadingImages, setLoadingImages] = useState<{[key: string]: boolean}>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -54,7 +65,7 @@ export default function ImprovedCalendar() {
     // Convert trips to calendar events when trips change
     const events: CalendarEvent[] = trips.map((trip: Trip) => ({
       id: trip._id,
-      title: trip.title,
+      title: trip.destination,
       start: new Date(trip.startDate),
       end: new Date(trip.endDate),
       destination: trip.destination,
@@ -122,6 +133,8 @@ export default function ImprovedCalendar() {
       if (response.ok) {
         const fetchedTrips = await response.json();
         setTrips(fetchedTrips);
+        // Fetch images for each trip
+        fetchTripImages(fetchedTrips);
       } else {
         console.error('Failed to fetch trips:', response.status);
       }
@@ -130,6 +143,47 @@ export default function ImprovedCalendar() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Function to fetch destination images for all trips
+  const fetchTripImages = async (tripsData: Trip[]) => {
+    for (const trip of tripsData) {
+      const imageKey = trip._id;
+      if (!tripImages[imageKey] && !loadingImages[imageKey]) {
+        setLoadingImages(prev => ({ ...prev, [imageKey]: true }));
+        try {
+          const imageUrl = await fetchDestinationImage(trip.destination, trip.state);
+          setTripImages(prev => ({
+            ...prev,
+            [imageKey]: imageUrl
+          }));
+        } catch (error) {
+          console.error('Error loading trip image:', error);
+        } finally {
+          setLoadingImages(prev => ({ ...prev, [imageKey]: false }));
+        }
+      }
+    }
+  };
+
+  // Function to fetch destination image from Google Places API
+  const fetchDestinationImage = async (destination: string, state: string): Promise<string> => {
+    try {
+      const searchQuery = `${destination} ${state} tourism India`;
+      const response = await fetch(`/api/places-image?place=${encodeURIComponent(searchQuery)}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.imageUrl) {
+          return data.imageUrl;
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching destination image:', error);
+    }
+    
+    // Return fallback image
+    return "https://images.unsplash.com/photo-1488646953014-85cb44e25828?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
   };
 
   const getDestinationColor = (destination: string) => {
@@ -207,8 +261,12 @@ export default function ImprovedCalendar() {
   };
 
   const openTripModal = (event: CalendarEvent) => {
-    setSelectedTrip(event);
-    setIsModalOpen(true);
+    // Find the actual trip from the trips array using the id from the event
+    const actualTrip = trips.find(trip => trip._id === event.id);
+    if (actualTrip) {
+      setSelectedTrip(actualTrip);
+      setIsModalOpen(true);
+    }
   };
 
   // Refresh trips when user creates a new trip
@@ -508,15 +566,15 @@ export default function ImprovedCalendar() {
                 <span className="font-bold text-xl text-gray-900">{trips.length}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Confirmed:</span>
-                <span className="font-bold text-xl text-green-600">
-                  {trips.filter(t => t.status === 'confirmed').length}
+                <span className="text-gray-600">Upcoming:</span>
+                <span className="font-bold text-xl text-blue-600">
+                  {trips.filter(t => t.status === 'upcoming').length}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Draft:</span>
-                <span className="font-bold text-xl text-yellow-600">
-                  {trips.filter(t => t.status === 'draft').length}
+                <span className="text-gray-600">Ongoing:</span>
+                <span className="font-bold text-xl text-green-600">
+                  {trips.filter(t => t.status === 'ongoing').length}
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -598,41 +656,61 @@ export default function ImprovedCalendar() {
       {/* Trip Details Modal */}
       {isModalOpen && selectedTrip && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden">
-            <div 
-              className="h-32 bg-gradient-to-r from-blue-500 to-purple-600 relative"
-              style={{ background: `linear-gradient(135deg, ${selectedTrip.color}22, ${selectedTrip.color}44)` }}
-            >
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            {/* Trip Image Header */}
+            <div className="relative h-48 bg-gray-200 overflow-hidden">
+              {loadingImages[selectedTrip._id] ? (
+                <div className="w-full h-full bg-gray-300 animate-pulse flex items-center justify-center">
+                  <span className="text-gray-500">Loading image...</span>
+                </div>
+              ) : (
+                <Image
+                  src={tripImages[selectedTrip._id] || "https://images.unsplash.com/photo-1488646953014-85cb44e25828?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"}
+                  alt={`${selectedTrip.destination}, ${selectedTrip.state}`}
+                  fill
+                  className="object-cover"
+                />
+              )}
+              <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+              
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="absolute top-4 right-4 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-all"
               >
                 ×
               </button>
+              
               <div className="absolute bottom-4 left-4 text-white">
-                <h3 className="text-xl font-bold">{selectedTrip.title}</h3>
-                <p className="text-white/80 flex items-center">
+                <h3 className="text-2xl font-bold">{selectedTrip.destination}</h3>
+                <p className="text-white/90 flex items-center">
                   <MapPin className="w-4 h-4 mr-1" />
-                  {selectedTrip.destination}
+                  {selectedTrip.state}
                 </p>
               </div>
             </div>
             
             <div className="p-6">
               <div className="space-y-4">
+                <div className="flex justify-between items-start mb-4">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    selectedTrip.status === 'upcoming' ? 'bg-blue-100 text-blue-800' :
+                    selectedTrip.status === 'ongoing' ? 'bg-green-100 text-green-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {selectedTrip.status.charAt(0).toUpperCase() + selectedTrip.status.slice(1)}
+                  </span>
+                </div>
+
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Dates:</span>
-                  <span className="font-medium">
-                    {selectedTrip.start.toLocaleDateString()} - {selectedTrip.end.toLocaleDateString()}
+                  <span className="font-medium text-gray-600">
+                    {new Date(selectedTrip.startDate).toLocaleDateString()} - {new Date(selectedTrip.endDate).toLocaleDateString()}
                   </span>
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600 flex items-center">
-                    <Users className="w-4 h-4 mr-2" />
-                    Travelers:
-                  </span>
-                  <span className="font-medium">{selectedTrip.travelers}</span>
+                  <span className="text-gray-600">Duration:</span>
+                  <span className="font-medium text-gray-600">{selectedTrip.duration} days</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -640,32 +718,36 @@ export default function ImprovedCalendar() {
                     <DollarSign className="w-4 h-4 mr-2" />
                     Budget:
                   </span>
-                  <span className="font-medium">{selectedTrip.budget}</span>
+                  <span className="font-medium text-gray-600">₹{selectedTrip.budget?.toLocaleString()}</span>
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Status:</span>
-                  <span 
-                    className="px-3 py-1 rounded-full text-sm font-medium text-white"
-                    style={{ backgroundColor: selectedTrip.color }}
-                  >
-                    {selectedTrip.status.charAt(0).toUpperCase() + selectedTrip.status.slice(1)}
-                  </span>
-                </div>
+
+                {selectedTrip.itinerary && selectedTrip.itinerary.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="font-semibold text-gray-800 mb-2">Itinerary Preview</h4>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {selectedTrip.itinerary.slice(0, 3).map((day: any, index: number) => (
+                        <div key={index} className="border rounded-lg p-3 bg-gray-50">
+                          <h5 className="font-medium text-gray-800">Day {day.day}</h5>
+                          <p className="text-gray-600 text-sm">
+                            {day.activities.slice(0, 2).map((activity: any) => activity.name).join(', ')}
+                            {day.activities.length > 2 && ` +${day.activities.length - 2} more`}
+                          </p>
+                        </div>
+                      ))}
+                      {selectedTrip.itinerary.length > 3 && (
+                        <p className="text-gray-500 text-sm">+{selectedTrip.itinerary.length - 3} more days</p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
               
-              <div className="mt-6 flex space-x-3">
+              <div className="mt-6 flex justify-end">
                 <Link 
-                  href={`/trip-details/${selectedTrip.id}`}
-                  className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all text-center"
+                  href={`/trip-details/${selectedTrip._id}`}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all"
                 >
                   View Details
-                </Link>
-                <Link 
-                  href={`/edit-trip/${selectedTrip.id}`}
-                  className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all text-center"
-                >
-                  Edit Trip
                 </Link>
               </div>
             </div>
