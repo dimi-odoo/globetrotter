@@ -27,7 +27,7 @@ interface Suggestion {
   rating: number;
   category: string;
   bestTime: string;
-  weeklyOff?: string;
+  weeklyOff: string;
   entranceFee?: string;
 }
 
@@ -115,6 +115,15 @@ export default function PlanTrip() {
   const [generatingItinerary, setGeneratingItinerary] = useState(false);
   const [itineraryApproved, setItineraryApproved] = useState(false);
   const [draggedItem, setDraggedItem] = useState<TravelPlanItem | null>(null);
+  const [notification, setNotification] = useState<{
+    show: boolean;
+    message: string;
+    type: 'success' | 'error' | 'info';
+  }>({
+    show: false,
+    message: '',
+    type: 'success'
+  });
 
   // Check if user is logged in and verified
   useEffect(() => {
@@ -171,28 +180,30 @@ export default function PlanTrip() {
       const destinationInfo = indianDestinations.find(d => d.id === tripPlan.destination);
       const tripDuration = calculateDays();
       
-      const prompt = `Generate a detailed travel guide for ${destinationInfo?.name}, ${destinationInfo?.state}, India for a ${tripDuration}-day trip with ${tripPlan.travelers} travelers on a ${tripPlan.budget} budget. 
-      
-      Interests: ${tripPlan.interests.join(', ')}
-      
-      Please provide exactly 8-10 recommendations (mix of places to visit and activities to do) in the following JSON format:
-      
-      [
-        {
-          "name": "Place/Activity Name",
-          "type": "place" or "activity",
-          "description": "Brief description",
-          "duration": "Time needed (e.g., 2-3 hours)",
-          "cost": "Cost in INR (e.g., ₹500-1000 or Free)",
-          "rating": 4.5,
-          "category": "Historical/Adventure/Cultural/etc",
-          "bestTime": "Best time to visit",
-          "weeklyOff": "Day closed (if applicable)",
-          "entranceFee": "Entrance fee details (if applicable)"
-        }
-      ]
-      
-      Focus on popular, authentic, and highly-rated places and activities. Include a good mix of must-see attractions and unique experiences. Consider the budget and interests provided.`;
+             const prompt = `Generate a detailed travel guide for ${destinationInfo?.name}, ${destinationInfo?.state}, India for a ${tripDuration}-day trip with ${tripPlan.travelers} travelers on a ${tripPlan.budget} budget. 
+       
+       Interests: ${tripPlan.interests.join(', ')}
+       
+       Please provide exactly 8-10 recommendations (mix of places to visit and activities to do) in the following JSON format:
+       
+       [
+         {
+           "name": "Place/Activity Name",
+           "type": "place" or "activity",
+           "description": "Brief description (2-3 sentences)",
+           "duration": "Time needed (e.g., 2-3 hours)",
+           "cost": "Cost in INR (e.g., ₹500-1000 or Free)",
+           "rating": 4.5,
+           "category": "Historical/Adventure/Cultural/Spiritual/Food & Culture/Nature",
+           "bestTime": "Best time to visit (e.g., Morning, Evening, Anytime)",
+           "weeklyOff": "Day closed (e.g., Monday, None)",
+           "entranceFee": "Entrance fee details (e.g., ₹30 (Indians), ₹500 (Foreigners) or Free)"
+         }
+       ]
+       
+       Important: Ensure ALL fields are included for each recommendation. Use "None" for weeklyOff if no specific day is closed. Use "Free" for cost/entranceFee if no charge applies.
+       
+       Focus on popular, authentic, and highly-rated places and activities. Include a good mix of must-see attractions and unique experiences. Consider the budget and interests provided.`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -210,7 +221,9 @@ export default function PlanTrip() {
             return {
               ...item,
               id: index + 1,
-              image: imageUrl || getDefaultImage(item.category || 'general')
+              image: imageUrl || getDefaultImage(item.category || 'general'),
+              weeklyOff: item.weeklyOff || 'None',
+              entranceFee: item.entranceFee || 'Not specified'
             };
           })
         );
@@ -269,7 +282,61 @@ export default function PlanTrip() {
         cost: '₹1,500 - ₹2,500',
         rating: 4.7,
         category: 'Food & Culture',
-        bestTime: 'Evening (5-9 PM)'
+        bestTime: 'Evening (5-9 PM)',
+        weeklyOff: 'None',
+        entranceFee: 'Included in tour price'
+      },
+      {
+        id: 3,
+        name: 'Qutub Minar',
+        type: 'place',
+        description: 'Tallest brick minaret in the world, UNESCO World Heritage Site',
+        duration: '1-2 hours',
+        cost: '₹30 - ₹500',
+        rating: 4.5,
+        category: 'Historical',
+        bestTime: 'Morning (9-11 AM)',
+        weeklyOff: 'None',
+        entranceFee: '₹30 (Indians), ₹500 (Foreigners)'
+      },
+      {
+        id: 4,
+        name: 'Humayun\'s Tomb',
+        type: 'place',
+        description: 'Magnificent Mughal architecture and beautiful gardens',
+        duration: '2-3 hours',
+        cost: '₹30 - ₹500',
+        rating: 4.4,
+        category: 'Historical',
+        bestTime: 'Morning (8-11 AM)',
+        weeklyOff: 'None',
+        entranceFee: '₹30 (Indians), ₹500 (Foreigners)'
+      },
+      {
+        id: 5,
+        name: 'Lotus Temple',
+        type: 'place',
+        description: 'Stunning Bahá\'í House of Worship with peaceful atmosphere',
+        duration: '1-2 hours',
+        cost: 'Free',
+        rating: 4.6,
+        category: 'Spiritual',
+        bestTime: 'Morning or Evening',
+        weeklyOff: 'Monday',
+        entranceFee: 'Free'
+      },
+      {
+        id: 6,
+        name: 'India Gate',
+        type: 'place',
+        description: 'Iconic war memorial and popular evening hangout spot',
+        duration: '1-2 hours',
+        cost: 'Free',
+        rating: 4.2,
+        category: 'Historical',
+        bestTime: 'Evening (5-8 PM)',
+        weeklyOff: 'None',
+        entranceFee: 'Free'
       }
     ];
 
@@ -291,7 +358,7 @@ export default function PlanTrip() {
   const handlePlanTrip = (e: React.FormEvent) => {
     e.preventDefault();
     if (!tripPlan.startDate || !tripPlan.endDate || !tripPlan.destination) {
-      alert('Please fill in all required fields');
+      showNotification('Please fill in all required fields', 'error');
       return;
     }
     generateSuggestionsWithGemini();
@@ -308,6 +375,19 @@ export default function PlanTrip() {
     return 0;
   };
 
+  const showNotification = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setNotification({
+      show: true,
+      message,
+      type
+    });
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 3000);
+  };
+
   const addToTravelPlan = (suggestion: Suggestion) => {
     const newItem: TravelPlanItem = {
       id: Date.now(),
@@ -322,8 +402,8 @@ export default function PlanTrip() {
 
     setTravelPlan(prev => [...prev, newItem]);
     
-    // Show success message
-    alert(`${suggestion.name} added to your travel plan!`);
+    // Show success notification
+    showNotification(`${suggestion.name} added to your travel plan!`, 'success');
   };
 
   const removeFromTravelPlan = (itemId: number) => {
@@ -333,7 +413,7 @@ export default function PlanTrip() {
   // Generate day-wise itinerary using Gemini AI
   const generateDayWiseItinerary = async () => {
     if (travelPlan.length === 0) {
-      alert('Please add some activities to your travel plan first!');
+      showNotification('Please add some activities to your travel plan first!', 'error');
       return;
     }
 
@@ -535,31 +615,31 @@ Ensure all provided activities are included and well-distributed across the days
 
   const approveItinerary = () => {
     setItineraryApproved(true);
-    alert('Great! Your itinerary looks perfect. You can now save your trip.');
+    showNotification('Great! Your itinerary looks perfect. You can now save your trip.', 'success');
   };
 
   const rejectItinerary = () => {
     setShowItineraryReview(false);
     setGeneratedItinerary(null);
-    alert('No problem! You can modify your activities and generate a new itinerary.');
+    showNotification('No problem! You can modify your activities and generate a new itinerary.', 'info');
   };
 
   const saveTrip = async () => {
     // Check for token first (more reliable than user state)
     const token = localStorage.getItem('token');
     if (!token) {
-      alert('Please log in to save your trip');
+      showNotification('Please log in to save your trip', 'error');
       router.push('/login');
       return;
     }
 
     if (!tripPlan.destination || !tripPlan.startDate || !tripPlan.endDate) {
-      alert('Please fill in all required trip details');
+      showNotification('Please fill in all required trip details', 'error');
       return;
     }
 
     if (!itineraryApproved && !generatedItinerary) {
-      alert('Please generate and approve your itinerary first!');
+      showNotification('Please generate and approve your itinerary first!', 'error');
       return;
     }
 
@@ -651,11 +731,11 @@ Ensure all provided activities are included and well-distributed across the days
       }
 
       const savedTrip = await response.json();
-      alert('Trip saved successfully! Redirecting to your trips...');
+      showNotification('Trip saved successfully! Redirecting to your trips...', 'success');
       router.push('/calendar');
     } catch (error) {
       console.error('Error saving trip:', error);
-      alert('Failed to save trip. Please try again.');
+      showNotification('Failed to save trip. Please try again.', 'error');
     } finally {
       setSavingTrip(false);
     }
@@ -668,6 +748,59 @@ Ensure all provided activities are included and well-distributed across the days
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Notification Toast */}
+      {notification.show && (
+        <div className={`fixed top-4 right-4 z-[9999] max-w-sm w-full bg-white rounded-lg shadow-lg border-l-4 p-4 transform transition-all duration-300 ${
+          notification.type === 'success' ? 'border-green-500' : 
+          notification.type === 'error' ? 'border-red-500' : 
+          'border-blue-500'
+        }`}>
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              {notification.type === 'success' && (
+                <svg className="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+              {notification.type === 'error' && (
+                <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+              {notification.type === 'info' && (
+                <svg className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+            </div>
+            <div className="ml-3 w-0 flex-1">
+              <p className={`text-sm font-medium ${
+                notification.type === 'success' ? 'text-green-800' : 
+                notification.type === 'error' ? 'text-red-800' : 
+                'text-blue-800'
+              }`}>
+                {notification.message}
+              </p>
+            </div>
+            <div className="ml-4 flex-shrink-0 flex">
+              <button
+                onClick={() => setNotification(prev => ({ ...prev, show: false }))}
+                className={`inline-flex rounded-md p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                  notification.type === 'success' ? 'text-green-400 hover:text-green-500 focus:ring-green-500' : 
+                  notification.type === 'error' ? 'text-red-400 hover:text-red-500 focus:ring-red-500' : 
+                  'text-blue-400 hover:text-blue-500 focus:ring-blue-500'
+                }`}
+              >
+                <span className="sr-only">Close</span>
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Navigation */}
       <nav className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -703,8 +836,22 @@ Ensure all provided activities are included and well-distributed across the days
       </nav>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-600 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="relative py-16 overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/plan_trip.jpg"
+            alt="Plan Trip Background"
+            fill
+            className="object-cover"
+            priority
+          />
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-black/20"></div>
+        </div>
+        
+        {/* Content */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Plan Your Perfect Trip
           </h1>
@@ -858,7 +1005,7 @@ Ensure all provided activities are included and well-distributed across the days
                       Generating Suggestions...
                     </>
                   ) : (
-                    '🎯 Generate Trip Plan'
+                                         'Generate Trip Plan'
                   )}
                 </button>
               </div>
@@ -903,7 +1050,7 @@ Ensure all provided activities are included and well-distributed across the days
             {/* Suggestions Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredSuggestions.map((suggestion) => (
-                <div key={suggestion.id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div key={suggestion.id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
                   <div className="relative h-48 overflow-hidden rounded-t-2xl">
                     <Image
                       src={suggestion.image}
@@ -915,15 +1062,15 @@ Ensure all provided activities are included and well-distributed across the days
                       ⭐ {suggestion.rating}
                     </div>
                     <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-xs">
-                      {suggestion.type === 'place' ? '📍 Place' : '🎯 Activity'}
+                                             {suggestion.type === 'place' ? 'Place' : 'Activity'}
                     </div>
                   </div>
                   
-                  <div className="p-6">
+                  <div className="p-6 flex-1 flex flex-col">
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">
                       {suggestion.name}
                     </h3>
-                    <p className="text-gray-600 text-sm mb-4">
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                       {suggestion.description}
                     </p>
                     
@@ -943,12 +1090,15 @@ Ensure all provided activities are included and well-distributed across the days
                         <span className="font-medium text-gray-900">{suggestion.bestTime}</span>
                       </div>
                       
-                      {suggestion.weeklyOff && (
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-500">Weekly Off:</span>
-                          <span className="font-medium text-gray-900">{suggestion.weeklyOff}</span>
-                        </div>
-                      )}
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">Weekly Off:</span>
+                        <span className="font-medium text-gray-900">{suggestion.weeklyOff || 'None'}</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">Entrance Fee:</span>
+                        <span className="font-medium text-gray-900">{suggestion.entranceFee || 'Not specified'}</span>
+                      </div>
                       
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-500">Category:</span>
@@ -958,9 +1108,9 @@ Ensure all provided activities are included and well-distributed across the days
                     
                     <button 
                       onClick={() => addToTravelPlan(suggestion)}
-                      className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                      className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium mt-auto"
                     >
-                      ➕ Add to Travel Plan
+                                             Add to Travel Plan
                     </button>
                   </div>
                 </div>
@@ -994,9 +1144,9 @@ Ensure all provided activities are included and well-distributed across the days
                         </span>
                         <div>
                           <h4 className="font-semibold text-gray-900">{item.name}</h4>
-                          <p className="text-sm text-gray-600">
-                            {item.type === 'place' ? '📍' : '🎯'} {item.duration} • {item.cost}
-                          </p>
+                                                     <p className="text-sm text-gray-600">
+                             {item.type === 'place' ? 'Place' : 'Activity'} • {item.duration} • {item.cost}
+                           </p>
                         </div>
                       </div>
                     </div>
@@ -1005,7 +1155,7 @@ Ensure all provided activities are included and well-distributed across the days
                       className="text-red-600 hover:text-red-700 p-2"
                       title="Remove from plan"
                     >
-                      🗑️
+                                             ✕
                     </button>
                   </div>
                 ))}
@@ -1025,7 +1175,7 @@ Ensure all provided activities are included and well-distributed across the days
                   ) : (
                     <>
                       <Wand2 className="w-5 h-5" />
-                      <span>🗓️ Generate Day-wise Itinerary</span>
+                                             <span>Generate Day-wise Itinerary</span>
                     </>
                   )}
                 </button>
@@ -1036,7 +1186,7 @@ Ensure all provided activities are included and well-distributed across the days
                     disabled={savingTrip}
                     className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold disabled:opacity-50"
                   >
-                    {savingTrip ? '💾 Saving Trip...' : '💾 Save Trip to My Trips'}
+                                         {savingTrip ? 'Saving Trip...' : 'Save Trip to My Trips'}
                   </button>
                 )}
               </div>
@@ -1051,7 +1201,7 @@ Ensure all provided activities are included and well-distributed across the days
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                🗓️ Your Generated Itinerary
+                                 Your Generated Itinerary
               </h2>
               <p className="text-xl text-gray-600 mb-6">
                 Review your day-wise plan and make adjustments if needed
@@ -1064,14 +1214,14 @@ Ensure all provided activities are included and well-distributed across the days
                     className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold flex items-center justify-center space-x-2"
                   >
                     <Check className="w-5 h-5" />
-                    <span>✅ Looks Great! Approve Itinerary</span>
+                                         <span>Looks Great! Approve Itinerary</span>
                   </button>
                   <button
                     onClick={rejectItinerary}
                     className="bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition-colors font-semibold flex items-center justify-center space-x-2"
                   >
                     <X className="w-5 h-5" />
-                    <span>❌ Not Good, Let me modify</span>
+                                         <span>Not Good, Let me modify</span>
                   </button>
                 </div>
               )}
@@ -1079,7 +1229,7 @@ Ensure all provided activities are included and well-distributed across the days
               {itineraryApproved && (
                 <div className="bg-green-100 border border-green-400 rounded-lg p-4 mb-8 flex items-center justify-center space-x-2">
                   <Check className="w-5 h-5 text-green-600" />
-                  <span className="text-green-800 font-medium">✅ Itinerary Approved! Ready to save.</span>
+                                     <span className="text-green-800 font-medium">Itinerary Approved! Ready to save.</span>
                 </div>
               )}
             </div>
@@ -1088,11 +1238,11 @@ Ensure all provided activities are included and well-distributed across the days
             <div className="space-y-8">
               {generatedItinerary.days.map((day) => (
                 <div key={day.day} className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
+                                     <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6 text-white">
                     <h3 className="text-2xl font-bold mb-2">{day.date}</h3>
                     <div className="flex flex-wrap gap-4 text-blue-100">
-                      <span>💰 Est. Cost: {day.totalCost}</span>
-                      <span>📍 {day.activities.length} Activities</span>
+                                             <span>Est. Cost: {day.totalCost}</span>
+                       <span>{day.activities.length} Activities</span>
                     </div>
                   </div>
                   
@@ -1100,7 +1250,7 @@ Ensure all provided activities are included and well-distributed across the days
                     {/* Day Highlights */}
                     {day.highlights && day.highlights.length > 0 && (
                       <div className="mb-6 p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
-                        <h4 className="font-semibold text-gray-900 mb-2">🌟 Day Highlights</h4>
+                                                 <h4 className="font-semibold text-gray-900 mb-2">Day Highlights</h4>
                         <div className="flex flex-wrap gap-2">
                           {day.highlights.map((highlight, index) => (
                             <span key={index} className="bg-yellow-200 text-yellow-800 px-3 py-1 rounded-full text-sm">
@@ -1138,15 +1288,15 @@ Ensure all provided activities are included and well-distributed across the days
                                 </div>
                                 <p className="text-gray-600 text-sm mb-2">{activity.notes}</p>
                                 <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                                  <span className="flex items-center">
-                                    ⏱️ {activity.duration}
-                                  </span>
-                                  <span className="flex items-center">
-                                    💰 {activity.cost}
-                                  </span>
-                                  <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs">
-                                    {activity.type === 'place' ? '📍 Place' : '🎯 Activity'}
-                                  </span>
+                                                                     <span className="flex items-center">
+                                     {activity.duration}
+                                   </span>
+                                   <span className="flex items-center">
+                                     {activity.cost}
+                                   </span>
+                                   <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs">
+                                     {activity.type === 'place' ? 'Place' : 'Activity'}
+                                   </span>
                                 </div>
                               </div>
                             </div>
@@ -1193,16 +1343,16 @@ Ensure all provided activities are included and well-distributed across the days
 
             {/* Trip Summary */}
             <div className="mt-8 bg-white rounded-2xl shadow-lg p-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">📋 Trip Summary</h3>
+                             <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Trip Summary</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-4">💰 Total Estimated Cost</h4>
+                                     <h4 className="font-semibold text-gray-900 mb-4">Total Estimated Cost</h4>
                   <p className="text-3xl font-bold text-green-600">{generatedItinerary.totalTrip.totalCost}</p>
                 </div>
                 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-4">🌟 Trip Highlights</h4>
+                                     <h4 className="font-semibold text-gray-900 mb-4">Trip Highlights</h4>
                   <div className="flex flex-wrap gap-2">
                     {generatedItinerary.totalTrip.highlights.map((highlight, index) => (
                       <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
@@ -1214,7 +1364,7 @@ Ensure all provided activities are included and well-distributed across the days
               </div>
               
               <div className="mt-6">
-                <h4 className="font-semibold text-gray-900 mb-4">📝 Trip Overview</h4>
+                                 <h4 className="font-semibold text-gray-900 mb-4">Trip Overview</h4>
                 <p className="text-gray-700 leading-relaxed">{generatedItinerary.totalTrip.summary}</p>
               </div>
 
@@ -1225,7 +1375,7 @@ Ensure all provided activities are included and well-distributed across the days
                     disabled={savingTrip}
                     className="bg-green-600 text-white px-12 py-4 rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg disabled:opacity-50"
                   >
-                    {savingTrip ? '💾 Saving Trip...' : '💾 Save Complete Trip'}
+                                         {savingTrip ? 'Saving Trip...' : 'Save Complete Trip'}
                   </button>
                 </div>
               )}
@@ -1234,7 +1384,7 @@ Ensure all provided activities are included and well-distributed across the days
             {!itineraryApproved && (
               <div className="mt-8 text-center">
                 <p className="text-gray-600 text-lg">
-                  💡 <strong>Tip:</strong> You can drag and drop activities between days or use the arrow buttons to reorder them within a day.
+                  <strong>Tip:</strong> You can drag and drop activities between days or use the arrow buttons to reorder them within a day.
                 </p>
               </div>
             )}
