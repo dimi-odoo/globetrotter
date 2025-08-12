@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { Wand2, RefreshCw, GripVertical, ChevronUp, ChevronDown, Check, X } from 'lucide-react';
 
 interface TripPlan {
   startDate: string;
@@ -39,6 +40,23 @@ interface TravelPlanItem {
   duration: string;
   cost: string;
   notes?: string;
+}
+
+interface DayItinerary {
+  day: number;
+  date: string;
+  activities: TravelPlanItem[];
+  totalCost: string;
+  highlights: string[];
+}
+
+interface GeneratedItinerary {
+  days: DayItinerary[];
+  totalTrip: {
+    totalCost: string;
+    highlights: string[];
+    summary: string;
+  };
 }
 
 const indianDestinations = [
@@ -90,6 +108,13 @@ export default function PlanTrip() {
   const [travelPlan, setTravelPlan] = useState<TravelPlanItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  
+  // New states for itinerary generation
+  const [generatedItinerary, setGeneratedItinerary] = useState<GeneratedItinerary | null>(null);
+  const [showItineraryReview, setShowItineraryReview] = useState(false);
+  const [generatingItinerary, setGeneratingItinerary] = useState(false);
+  const [itineraryApproved, setItineraryApproved] = useState(false);
+  const [draggedItem, setDraggedItem] = useState<TravelPlanItem | null>(null);
 
   // Check if user is logged in and verified
   useEffect(() => {
@@ -305,6 +330,220 @@ export default function PlanTrip() {
     setTravelPlan(prev => prev.filter(item => item.id !== itemId));
   };
 
+  // Generate day-wise itinerary using Gemini AI
+  const generateDayWiseItinerary = async () => {
+    if (travelPlan.length === 0) {
+      alert('Please add some activities to your travel plan first!');
+      return;
+    }
+
+    setGeneratingItinerary(true);
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const destinationInfo = indianDestinations.find(d => d.id === tripPlan.destination);
+      const tripDuration = calculateDays();
+      
+      // Create activity list for the prompt
+      const activityList = travelPlan.map(item => ({
+        name: item.name,
+        type: item.type,
+        duration: item.duration,
+        cost: item.cost,
+        bestTime: item.timeSlot,
+        notes: item.notes
+      }));
+
+      const prompt = `Create a detailed ${tripDuration}-day itinerary for ${destinationInfo?.name}, ${destinationInfo?.state}, India.
+
+Trip Details:
+- Travelers: ${tripPlan.travelers} people
+- Budget: ${tripPlan.budget}
+- Interests: ${tripPlan.interests.join(', ')}
+- Start Date: ${tripPlan.startDate}
+- Activities to include: ${JSON.stringify(activityList, null, 2)}
+
+Please organize these activities optimally across ${tripDuration} days considering:
+1. Logical geographical flow and proximity
+2. Time management and realistic scheduling
+3. Energy levels throughout the day
+4. Best times to visit each place
+5. Budget distribution across days
+6. Travel time between locations
+7. Meal breaks and rest periods
+
+Return a JSON response in this exact format:
+{
+  "days": [
+    {
+      "day": 1,
+      "date": "Day 1 - [Date]",
+      "activities": [
+        {
+          "id": "unique_id",
+          "name": "Activity Name",
+          "type": "place/activity",
+          "timeSlot": "09:00 AM - 11:00 AM",
+          "duration": "2 hours",
+          "cost": "₹500-1000",
+          "notes": "Detailed description and tips"
+        }
+      ],
+      "totalCost": "₹2000-3000",
+      "highlights": ["Key highlight 1", "Key highlight 2"]
+    }
+  ],
+  "totalTrip": {
+    "totalCost": "₹${tripDuration * 2500}-${tripDuration * 4000}",
+    "highlights": ["Overall trip highlight 1", "Overall trip highlight 2", "Overall trip highlight 3"],
+    "summary": "Brief summary of the entire trip experience"
+  }
+}
+
+Ensure all provided activities are included and well-distributed across the days. Add specific time slots, and include practical tips for each activity.`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      // Extract JSON from the response
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const itineraryData = JSON.parse(jsonMatch[0]);
+        
+        // Convert the data to our format and add proper IDs
+        const formattedItinerary: GeneratedItinerary = {
+          days: itineraryData.days.map((day: any, dayIndex: number) => ({
+            ...day,
+            activities: day.activities.map((activity: any, actIndex: number) => ({
+              ...activity,
+              id: Date.now() + dayIndex * 1000 + actIndex,
+              day: day.day
+            }))
+          })),
+          totalTrip: itineraryData.totalTrip
+        };
+        
+        setGeneratedItinerary(formattedItinerary);
+        setShowItineraryReview(true);
+      } else {
+        // Fallback: Create a simple day-wise distribution
+        createFallbackItinerary();
+      }
+    } catch (error) {
+      console.error('Error generating itinerary:', error);
+      createFallbackItinerary();
+    } finally {
+      setGeneratingItinerary(false);
+    }
+  };
+
+  // Fallback itinerary creation
+  const createFallbackItinerary = () => {
+    const tripDuration = calculateDays();
+    const activitiesPerDay = Math.ceil(travelPlan.length / tripDuration);
+    const days: DayItinerary[] = [];
+
+    for (let dayNum = 1; dayNum <= tripDuration; dayNum++) {
+      const startIndex = (dayNum - 1) * activitiesPerDay;
+      const endIndex = Math.min(startIndex + activitiesPerDay, travelPlan.length);
+      const dayActivities = travelPlan.slice(startIndex, endIndex);
+      
+      const currentDate = new Date(tripPlan.startDate);
+      currentDate.setDate(currentDate.getDate() + dayNum - 1);
+
+      days.push({
+        day: dayNum,
+        date: `Day ${dayNum} - ${currentDate.toDateString()}`,
+        activities: dayActivities.map(activity => ({
+          ...activity,
+          day: dayNum
+        })),
+        totalCost: `₹${dayActivities.length * 1000}-${dayActivities.length * 2000}`,
+        highlights: dayActivities.slice(0, 2).map(a => a.name)
+      });
+    }
+
+    const fallbackItinerary: GeneratedItinerary = {
+      days,
+      totalTrip: {
+        totalCost: `₹${travelPlan.length * 800}-${travelPlan.length * 1500}`,
+        highlights: travelPlan.slice(0, 3).map(a => a.name),
+        summary: `Amazing ${tripDuration}-day trip to ${indianDestinations.find(d => d.id === tripPlan.destination)?.name} with ${travelPlan.length} exciting activities!`
+      }
+    };
+
+    setGeneratedItinerary(fallbackItinerary);
+    setShowItineraryReview(true);
+  };
+
+  // Handle drag and drop for rearranging activities
+  const handleDragStart = (activity: TravelPlanItem) => {
+    setDraggedItem(activity);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, targetDay: number, targetIndex?: number) => {
+    e.preventDefault();
+    if (!draggedItem || !generatedItinerary) return;
+
+    const updatedItinerary = { ...generatedItinerary };
+    
+    // Remove item from its current position
+    updatedItinerary.days.forEach(day => {
+      day.activities = day.activities.filter(activity => activity.id !== draggedItem.id);
+    });
+
+    // Add item to new position
+    const targetDayIndex = updatedItinerary.days.findIndex(day => day.day === targetDay);
+    if (targetDayIndex !== -1) {
+      const updatedActivity = { ...draggedItem, day: targetDay };
+      if (targetIndex !== undefined) {
+        updatedItinerary.days[targetDayIndex].activities.splice(targetIndex, 0, updatedActivity);
+      } else {
+        updatedItinerary.days[targetDayIndex].activities.push(updatedActivity);
+      }
+    }
+
+    setGeneratedItinerary(updatedItinerary);
+    setDraggedItem(null);
+  };
+
+  const moveActivity = (activityId: number, direction: 'up' | 'down', dayNumber: number) => {
+    if (!generatedItinerary) return;
+
+    const updatedItinerary = { ...generatedItinerary };
+    const dayIndex = updatedItinerary.days.findIndex(day => day.day === dayNumber);
+    
+    if (dayIndex === -1) return;
+
+    const activities = updatedItinerary.days[dayIndex].activities;
+    const activityIndex = activities.findIndex(activity => activity.id === activityId);
+    
+    if (activityIndex === -1) return;
+
+    if (direction === 'up' && activityIndex > 0) {
+      [activities[activityIndex], activities[activityIndex - 1]] = [activities[activityIndex - 1], activities[activityIndex]];
+    } else if (direction === 'down' && activityIndex < activities.length - 1) {
+      [activities[activityIndex], activities[activityIndex + 1]] = [activities[activityIndex + 1], activities[activityIndex]];
+    }
+
+    setGeneratedItinerary(updatedItinerary);
+  };
+
+  const approveItinerary = () => {
+    setItineraryApproved(true);
+    alert('Great! Your itinerary looks perfect. You can now save your trip.');
+  };
+
+  const rejectItinerary = () => {
+    setShowItineraryReview(false);
+    setGeneratedItinerary(null);
+    alert('No problem! You can modify your activities and generate a new itinerary.');
+  };
+
   const saveTrip = async () => {
     // Check for token first (more reliable than user state)
     const token = localStorage.getItem('token');
@@ -319,34 +558,66 @@ export default function PlanTrip() {
       return;
     }
 
+    if (!itineraryApproved && !generatedItinerary) {
+      alert('Please generate and approve your itinerary first!');
+      return;
+    }
+
     setSavingTrip(true);
     try {
-
       // Get destination details
       const destinationInfo = indianDestinations.find(d => d.id === tripPlan.destination);
       
-      // Format itinerary by days
-      const itinerary = travelPlan.reduce((acc: any[], item) => {
-        const existingDay = acc.find(d => d.day === item.day);
-        const cleanActivity = {
-          name: item.name || '',
-          type: item.type || '',
-          timeSlot: item.timeSlot || '',
-          duration: item.duration || '',
-          cost: item.cost || '',
-          notes: (item.notes || '').replace(/\n/g, ' ').replace(/\r/g, ' ').trim()
-        };
+      // Use generated itinerary if approved, otherwise use the simple travel plan
+      let itinerary;
+      let highlights;
+      let totalCost;
+      let notes;
+
+      if (generatedItinerary && itineraryApproved) {
+        // Format the generated itinerary for database storage
+        itinerary = generatedItinerary.days.map(day => ({
+          day: day.day,
+          activities: day.activities.map(activity => ({
+            name: activity.name,
+            type: activity.type,
+            timeSlot: activity.timeSlot,
+            duration: activity.duration,
+            cost: activity.cost,
+            notes: activity.notes || ''
+          }))
+        }));
         
-        if (existingDay) {
-          existingDay.activities.push(cleanActivity);
-        } else {
-          acc.push({
-            day: item.day,
-            activities: [cleanActivity]
-          });
-        }
-        return acc;
-      }, []);
+        highlights = generatedItinerary.totalTrip.highlights;
+        totalCost = generatedItinerary.totalTrip.totalCost;
+        notes = `${generatedItinerary.totalTrip.summary} - Trip planned for ${tripPlan.travelers} travelers with interests in: ${tripPlan.interests.join(', ')}`;
+      } else {
+        // Fallback to simple format
+        itinerary = travelPlan.reduce((acc: any[], item) => {
+          const existingDay = acc.find(d => d.day === item.day);
+          const cleanActivity = {
+            name: item.name || '',
+            type: item.type || '',
+            timeSlot: item.timeSlot || '',
+            duration: item.duration || '',
+            cost: item.cost || '',
+            notes: (item.notes || '').replace(/\n/g, ' ').replace(/\r/g, ' ').trim()
+          };
+          
+          if (existingDay) {
+            existingDay.activities.push(cleanActivity);
+          } else {
+            acc.push({
+              day: item.day,
+              activities: [cleanActivity]
+            });
+          }
+          return acc;
+        }, []);
+
+        highlights = suggestions.slice(0, 3).map(s => s.name);
+        notes = `Trip planned for ${tripPlan.travelers} travelers with interests in: ${tripPlan.interests.join(', ')}`;
+      }
 
       const tripData = {
         destination: destinationInfo?.name || tripPlan.destination,
@@ -357,15 +628,14 @@ export default function PlanTrip() {
         budget: tripPlan.budget,
         interests: tripPlan.interests,
         image: getDefaultImage('general'),
-        highlights: suggestions.slice(0, 3).map(s => s.name), // Top 3 suggestions as highlights
+        highlights: highlights,
         itinerary: itinerary,
-        notes: `Trip planned for ${tripPlan.travelers} travelers with interests in: ${tripPlan.interests.join(', ')}`,
+        notes: notes,
+        totalCost: totalCost,
         aiGeneratedPlan: JSON.stringify(suggestions) // Store AI suggestions for reference
       };
 
       console.log('Trip data being sent:', JSON.stringify(tripData, null, 2));
-      console.log('Itinerary structure:', itinerary);
-      console.log('TravelPlan items:', travelPlan);
 
       const response = await fetch('/api/trips', {
         method: 'POST',
@@ -382,7 +652,7 @@ export default function PlanTrip() {
 
       const savedTrip = await response.json();
       alert('Trip saved successfully! Redirecting to your trips...');
-      router.push('/my-trips');
+      router.push('/calendar');
     } catch (error) {
       console.error('Error saving trip:', error);
       alert('Failed to save trip. Please try again.');
@@ -741,16 +1011,233 @@ export default function PlanTrip() {
                 ))}
               </div>
               
-              <div className="mt-8 text-center">
+              <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
                 <button 
-                  onClick={saveTrip}
-                  disabled={savingTrip}
-                  className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold disabled:opacity-50"
+                  onClick={generateDayWiseItinerary}
+                  disabled={generatingItinerary}
+                  className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
-                  {savingTrip ? '� Saving Trip...' : '💾 Save Trip to My Trips'}
+                  {generatingItinerary ? (
+                    <>
+                      <RefreshCw className="w-5 h-5 animate-spin" />
+                      <span>Generating Itinerary...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-5 h-5" />
+                      <span>🗓️ Generate Day-wise Itinerary</span>
+                    </>
+                  )}
                 </button>
+                
+                {itineraryApproved && (
+                  <button 
+                    onClick={saveTrip}
+                    disabled={savingTrip}
+                    className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold disabled:opacity-50"
+                  >
+                    {savingTrip ? '💾 Saving Trip...' : '💾 Save Trip to My Trips'}
+                  </button>
+                )}
               </div>
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* Itinerary Review Section */}
+      {showItineraryReview && generatedItinerary && (
+        <section className="py-16 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                🗓️ Your Generated Itinerary
+              </h2>
+              <p className="text-xl text-gray-600 mb-6">
+                Review your day-wise plan and make adjustments if needed
+              </p>
+              
+              {!itineraryApproved && (
+                <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+                  <button
+                    onClick={approveItinerary}
+                    className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold flex items-center justify-center space-x-2"
+                  >
+                    <Check className="w-5 h-5" />
+                    <span>✅ Looks Great! Approve Itinerary</span>
+                  </button>
+                  <button
+                    onClick={rejectItinerary}
+                    className="bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition-colors font-semibold flex items-center justify-center space-x-2"
+                  >
+                    <X className="w-5 h-5" />
+                    <span>❌ Not Good, Let me modify</span>
+                  </button>
+                </div>
+              )}
+
+              {itineraryApproved && (
+                <div className="bg-green-100 border border-green-400 rounded-lg p-4 mb-8 flex items-center justify-center space-x-2">
+                  <Check className="w-5 h-5 text-green-600" />
+                  <span className="text-green-800 font-medium">✅ Itinerary Approved! Ready to save.</span>
+                </div>
+              )}
+            </div>
+
+            {/* Day-wise Itinerary */}
+            <div className="space-y-8">
+              {generatedItinerary.days.map((day) => (
+                <div key={day.day} className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                  <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
+                    <h3 className="text-2xl font-bold mb-2">{day.date}</h3>
+                    <div className="flex flex-wrap gap-4 text-blue-100">
+                      <span>💰 Est. Cost: {day.totalCost}</span>
+                      <span>📍 {day.activities.length} Activities</span>
+                    </div>
+                  </div>
+                  
+                  <div className="p-6">
+                    {/* Day Highlights */}
+                    {day.highlights && day.highlights.length > 0 && (
+                      <div className="mb-6 p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
+                        <h4 className="font-semibold text-gray-900 mb-2">🌟 Day Highlights</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {day.highlights.map((highlight, index) => (
+                            <span key={index} className="bg-yellow-200 text-yellow-800 px-3 py-1 rounded-full text-sm">
+                              {highlight}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Activities List */}
+                    <div className="space-y-4">
+                      {day.activities.map((activity, index) => (
+                        <div
+                          key={activity.id}
+                          draggable={!itineraryApproved}
+                          onDragStart={() => handleDragStart(activity)}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => handleDrop(e, day.day, index)}
+                          className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
+                            itineraryApproved 
+                              ? 'bg-gray-50 border-gray-200' 
+                              : 'bg-blue-50 border-blue-200 hover:border-blue-400 cursor-move'
+                          }`}
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-start space-x-4">
+                              {!itineraryApproved && (
+                                <GripVertical className="w-5 h-5 text-gray-400 mt-1" />
+                              )}
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h5 className="font-semibold text-gray-900">{activity.name}</h5>
+                                  <span className="text-sm font-medium text-blue-600">{activity.timeSlot}</span>
+                                </div>
+                                <p className="text-gray-600 text-sm mb-2">{activity.notes}</p>
+                                <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                                  <span className="flex items-center">
+                                    ⏱️ {activity.duration}
+                                  </span>
+                                  <span className="flex items-center">
+                                    💰 {activity.cost}
+                                  </span>
+                                  <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs">
+                                    {activity.type === 'place' ? '📍 Place' : '🎯 Activity'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {!itineraryApproved && (
+                            <div className="flex flex-col space-y-1 ml-4">
+                              <button
+                                onClick={() => moveActivity(activity.id, 'up', day.day)}
+                                disabled={index === 0}
+                                className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                                title="Move up"
+                              >
+                                <ChevronUp className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => moveActivity(activity.id, 'down', day.day)}
+                                disabled={index === day.activities.length - 1}
+                                className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                                title="Move down"
+                              >
+                                <ChevronDown className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Drop Zone for moving activities between days */}
+                    {!itineraryApproved && (
+                      <div
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, day.day)}
+                        className="mt-4 p-4 border-2 border-dashed border-gray-300 rounded-lg text-center text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
+                      >
+                        Drop activities here to add to this day
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Trip Summary */}
+            <div className="mt-8 bg-white rounded-2xl shadow-lg p-8">
+              <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">📋 Trip Summary</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-4">💰 Total Estimated Cost</h4>
+                  <p className="text-3xl font-bold text-green-600">{generatedItinerary.totalTrip.totalCost}</p>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-4">🌟 Trip Highlights</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {generatedItinerary.totalTrip.highlights.map((highlight, index) => (
+                      <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                        {highlight}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-6">
+                <h4 className="font-semibold text-gray-900 mb-4">📝 Trip Overview</h4>
+                <p className="text-gray-700 leading-relaxed">{generatedItinerary.totalTrip.summary}</p>
+              </div>
+
+              {itineraryApproved && (
+                <div className="mt-8 text-center">
+                  <button 
+                    onClick={saveTrip}
+                    disabled={savingTrip}
+                    className="bg-green-600 text-white px-12 py-4 rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg disabled:opacity-50"
+                  >
+                    {savingTrip ? '💾 Saving Trip...' : '💾 Save Complete Trip'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {!itineraryApproved && (
+              <div className="mt-8 text-center">
+                <p className="text-gray-600 text-lg">
+                  💡 <strong>Tip:</strong> You can drag and drop activities between days or use the arrow buttons to reorder them within a day.
+                </p>
+              </div>
+            )}
           </div>
         </section>
       )}
