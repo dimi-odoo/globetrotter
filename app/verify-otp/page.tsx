@@ -7,7 +7,8 @@ import Link from 'next/link';
 export default function VerifyOTPPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const email = searchParams.get('email');
+  const emailFromParams = searchParams.get('email');
+  const [userEmail, setUserEmail] = useState('');
   
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -17,10 +18,14 @@ export default function VerifyOTPPage() {
   const [resendCooldown, setResendCooldown] = useState(0);
 
   useEffect(() => {
-    if (!email) {
+    // Check for email from URL params or localStorage
+    const email = emailFromParams || localStorage.getItem('registrationEmail');
+    if (email) {
+      setUserEmail(email);
+    } else {
       router.push('/register');
     }
-  }, [email, router]);
+  }, [emailFromParams, router]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -74,7 +79,7 @@ export default function VerifyOTPPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email,
+          email: userEmail,
           otp: otpString
         }),
       });
@@ -115,7 +120,7 @@ export default function VerifyOTPPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: userEmail }),
       });
 
       const data = await response.json();
@@ -134,7 +139,7 @@ export default function VerifyOTPPage() {
     }
   };
 
-  if (!email) {
+  if (!userEmail) {
     return null; // Will redirect
   }
 
@@ -156,7 +161,7 @@ export default function VerifyOTPPage() {
           <p className="text-gray-600 text-sm">
             We've sent a 6-digit verification code to
           </p>
-          <p className="text-blue-600 font-medium">{email}</p>
+          <p className="text-blue-600 font-medium">{userEmail}</p>
         </div>
 
         <form onSubmit={handleVerifyOtp} className="space-y-6">

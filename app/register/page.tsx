@@ -97,7 +97,9 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (response.ok) {
-        router.push('/login?message=Registration successful! Please login.');
+        // Store email for OTP verification
+        localStorage.setItem('registrationEmail', formData.email);
+        router.push('/verify-otp');
       } else {
         setError(data.error || 'Registration failed');
       }
