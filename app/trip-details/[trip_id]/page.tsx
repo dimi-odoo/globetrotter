@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Calendar, MapPin, Users, DollarSign, Clock, User, Star, ArrowLeft, Edit3, Share2, Download, Heart, MessageCircle, ChevronDown } from 'lucide-react';
+import { Calendar, MapPin, Users, DollarSign, Clock, User, Star, ArrowLeft, Share2, Download, Heart, MessageCircle, ChevronDown } from 'lucide-react';
 
 interface User {
   _id: string;
@@ -469,15 +469,6 @@ export default function TripDetailsPage() {
                 <Share2 className="w-5 h-5 mr-2" />
                 Share
               </button>
-              {user && user._id === trip.userId && (
-                <Link
-                  href={`/edit-trip/${trip._id}`}
-                  className="flex items-center px-6 py-3 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition-colors ml-4"
-                >
-                  <Edit3 className="w-5 h-5 mr-2" />
-                  Edit Trip
-                </Link>
-              )}
             </div>
           </div>
 
