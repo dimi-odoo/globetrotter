@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [step, setStep] = useState(1);
+  const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -29,6 +30,10 @@ export default function RegisterPage() {
     country: '',
     description: ''
   });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -92,8 +97,7 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Redirect to OTP verification page with email
-        router.push(`/verify-otp?email=${encodeURIComponent(formData.email)}`);
+        router.push('/login?message=Registration successful! Please login.');
       } else {
         setError(data.error || 'Registration failed');
       }
@@ -105,6 +109,11 @@ export default function RegisterPage() {
   };
 
   const getStepProgress = () => (step / 3) * 100;
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return null;
+  }
 
   const PasswordStrength = ({ password }: { password: string }) => {
     const checks = [
@@ -145,7 +154,7 @@ export default function RegisterPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <Globe className="w-8 h-8 text-indigo-600" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
               Globetrotter
             </span>
           </div>
@@ -159,13 +168,13 @@ export default function RegisterPage() {
           {/* Progress Bar */}
           <div className="w-full max-w-md mx-auto mb-8">
             <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
-              <span className={step >= 1 ? 'text-indigo-600 font-medium' : ''}>Profile</span>
-              <span className={step >= 2 ? 'text-indigo-600 font-medium' : ''}>Account</span>
-              <span className={step >= 3 ? 'text-indigo-600 font-medium' : ''}>Details</span>
+              <span className={step >= 1 ? 'text-blue-600 font-medium' : ''}>Profile</span>
+              <span className={step >= 2 ? 'text-blue-600 font-medium' : ''}>Account</span>
+              <span className={step >= 3 ? 'text-blue-600 font-medium' : ''}>Details</span>
             </div>
             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-500 ease-out"
+                className="h-full bg-gradient-to-r from-indigo-500 to-blue-600 transition-all duration-500 ease-out"
                 style={{ width: `${getStepProgress()}%` }}
               ></div>
             </div>
@@ -173,7 +182,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Main Card */}
-        <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 md:p-12">
+        <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 p-8 md:p-12">
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
               <X className="w-5 h-5 text-red-500" />
@@ -196,7 +205,7 @@ export default function RegisterPage() {
                     Choose your profile photo
                   </label>
                   <div className="relative group">
-                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-xl ring-4 ring-indigo-100 transition-all duration-300 group-hover:ring-indigo-200">
+                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-xl ring-4 ring-blue-100 transition-all duration-300 group-hover:ring-blue-200">
                       <Image 
                         src={selectedAvatar} 
                         alt="Profile avatar" 
@@ -208,7 +217,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setIsAvatarModalOpen(true)}
-                      className="absolute -bottom-2 -right-2 bg-indigo-600 text-white p-2 rounded-full shadow-lg hover:bg-indigo-700 transition-colors"
+                      className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
                     >
                       <Camera className="w-4 h-4" />
                     </button>
@@ -230,8 +239,9 @@ export default function RegisterPage() {
                         required
                         value={formData.firstName}
                         onChange={handleInputChange}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
-                        placeholder="John"
+                        className="w-full pl-10 pr-4 py-3 border text-gray-700 border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
+                        placeholder="First name"
+                        suppressHydrationWarning={true}
                       />
                     </div>
                   </div>
@@ -248,8 +258,9 @@ export default function RegisterPage() {
                         required
                         value={formData.lastName}
                         onChange={handleInputChange}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
-                        placeholder="Doe"
+                        className="w-full pl-10 pr-4 py-3 border text-gray-700 border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
+                        placeholder="Last name"
+                        suppressHydrationWarning={true}
                       />
                     </div>
                   </div>
@@ -280,8 +291,9 @@ export default function RegisterPage() {
                         required
                         value={formData.username}
                         onChange={handleInputChange}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
+                        className="w-full pl-10 pr-4 py-3 border text-gray-700 border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
                         placeholder="johndoe"
+                        suppressHydrationWarning={true}
                       />
                     </div>
                   </div>
@@ -300,8 +312,9 @@ export default function RegisterPage() {
                         required
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
+                        className="w-full pl-10 pr-4 py-3 border text-gray-700 border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
                         placeholder="john@example.com"
+                        suppressHydrationWarning={true}
                       />
                     </div>
                   </div>
@@ -321,13 +334,15 @@ export default function RegisterPage() {
                           required
                           value={formData.password}
                           onChange={handleInputChange}
-                          className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
+                          className="w-full pl-10 pr-10 py-3 border text-gray-700 border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
                           placeholder="••••••••"
+                          suppressHydrationWarning={true}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200 z-10 p-1 rounded-md hover:bg-gray-100"
+                          title={showPassword ? "Hide password" : "Show password"}
                         >
                           {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                         </button>
@@ -348,17 +363,19 @@ export default function RegisterPage() {
                           required
                           value={formData.confirmPassword}
                           onChange={handleInputChange}
-                          className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 ${
+                          className={`w-full pl-10 pr-10 py-3 border text-gray-700 border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 ${
                             formData.confirmPassword && formData.password !== formData.confirmPassword
                               ? 'border-red-300 focus:ring-red-500'
                               : 'border-gray-200'
                           }`}
                           placeholder="••••••••"
+                          suppressHydrationWarning={true}
                         />
                         <button
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200 z-10 p-1 rounded-md hover:bg-gray-100"
+                          title={showConfirmPassword ? "Hide password" : "Show password"}
                         >
                           {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                         </button>
@@ -395,8 +412,9 @@ export default function RegisterPage() {
                         required
                         value={formData.phoneNumber}
                         onChange={handleInputChange}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
                         placeholder="+91 98765 43210"
+                        suppressHydrationWarning={true}
                       />
                     </div>
                   </div>
@@ -416,8 +434,9 @@ export default function RegisterPage() {
                           required
                           value={formData.city}
                           onChange={handleInputChange}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
+                          className="w-full pl-10 pr-4 py-3 border text-gray-700 border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
                           placeholder="Mumbai"
+                          suppressHydrationWarning={true}
                         />
                       </div>
                     </div>
@@ -435,8 +454,9 @@ export default function RegisterPage() {
                           required
                           value={formData.country}
                           onChange={handleInputChange}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
+                          className="w-full pl-10 pr-4 py-3 border text-gray-700 border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
                           placeholder="India"
+                          suppressHydrationWarning={true}
                         />
                       </div>
                     </div>
@@ -467,7 +487,7 @@ export default function RegisterPage() {
                     (step === 1 && !validateStep1()) ||
                     (step === 2 && !validateStep2())
                   }
-                  className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-blue-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   Next Step
                 </button>
@@ -475,7 +495,7 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={loading || !validateStep3()}
-                  className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-blue-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   {loading ? (
                     <div className="flex items-center gap-2">
@@ -496,7 +516,7 @@ export default function RegisterPage() {
               Already have an account?{' '}
               <Link 
                 href="/login" 
-                className="text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+                className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
               >
                 Sign in
               </Link>
