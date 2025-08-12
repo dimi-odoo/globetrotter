@@ -412,7 +412,7 @@ export default function RegisterPage() {
                         required
                         value={formData.phoneNumber}
                         onChange={handleInputChange}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
+                        className="w-full pl-10 text-black pr-4 py-3 border border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50/50"
                         placeholder="+91 98765 43210"
                         suppressHydrationWarning={true}
                       />
