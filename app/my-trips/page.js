@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 function MyTripsPage() {
@@ -10,6 +11,8 @@ function MyTripsPage() {
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [tripImages, setTripImages] = useState({});
+  const [loadingImages, setLoadingImages] = useState({});
   const dropdownRef = useRef(null);
   const router = useRouter();
 
@@ -69,11 +72,71 @@ function MyTripsPage() {
       const trips = await response.json();
       console.log('Fetched trips:', trips);
       setTrips(trips || []);
+      
+      // Fetch images for each trip
+      fetchTripImages(trips || []);
     } catch (err) {
       console.error('Error fetching trips:', err);
       setError('Failed to load trips');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Function to fetch destination images for all trips
+  const fetchTripImages = async (tripsData) => {
+    for (const trip of tripsData) {
+      const imageKey = trip._id;
+      if (!tripImages[imageKey] && !loadingImages[imageKey]) {
+        setLoadingImages(prev => ({ ...prev, [imageKey]: true }));
+        try {
+          const imageUrl = await fetchDestinationImage(trip.destination, trip.state);
+          setTripImages(prev => ({
+            ...prev,
+            [imageKey]: imageUrl
+          }));
+        } catch (error) {
+          console.error('Error loading trip image:', error);
+        } finally {
+          setLoadingImages(prev => ({ ...prev, [imageKey]: false }));
+        }
+      }
+    }
+  };
+
+  // Function to fetch destination image from Google Places API
+  const fetchDestinationImage = async (destination, state) => {
+    try {
+      const searchQuery = `${destination} ${state} tourism India`;
+      const response = await fetch(`/api/places-image?place=${encodeURIComponent(searchQuery)}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.imageUrl) {
+          return data.imageUrl;
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching destination image:', error);
+    }
+    
+    // Return fallback image
+    return "https://images.unsplash.com/photo-1488646953014-85cb44e25828?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
+  };
+
+  // Function to retry loading an image for a specific trip
+  const retryImageLoad = async (tripId, destination, state) => {
+    setLoadingImages(prev => ({ ...prev, [tripId]: true }));
+    try {
+      const imageUrl = await fetchDestinationImage(destination, state);
+      setTripImages(prev => ({
+        ...prev,
+        [tripId]: imageUrl
+      }));
+    } catch (error) {
+      console.error('Error retrying image load:', error);
+    } finally {
+      setLoadingImages(prev => ({ ...prev, [tripId]: false }));
     }
   };
 
@@ -263,33 +326,112 @@ function MyTripsPage() {
             ) : (
               /* Trips Grid */
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {trips.map((trip) => (
-                    <div
-                      key={trip._id}
-                      className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-                    >
-                      {/* Trip Header */}
-                      <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="text-xl font-bold truncate">{trip.destination}</h3>
-                          <div className="flex items-center bg-white bg-opacity-20 rounded-full px-2 py-1">
-                            <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                            </svg>
-                            <span className="text-xs text-gray-700 font-medium">{trip.duration} days</span>
-                          </div>
-                        </div>
-                        {trip.state && (
-                          <div className="flex items-center text-blue-100">
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <span className="text-sm">{trip.state}</span>
-                          </div>
+                {/* Trip Summary Header */}
+                <div className="mb-8 p-6 bg-white rounded-xl shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Travel Adventures</h2>
+                      <p className="text-gray-600">
+                        {trips.length} {trips.length === 1 ? 'trip' : 'trips'} planned
+                        {Object.keys(loadingImages).filter(key => loadingImages[key]).length > 0 && (
+                          <span className="ml-2 text-sm text-blue-600">
+                            • Loading {Object.keys(loadingImages).filter(key => loadingImages[key]).length} destination {Object.keys(loadingImages).filter(key => loadingImages[key]).length === 1 ? 'image' : 'images'}...
+                          </span>
                         )}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-500 mb-1">Powered by</div>
+                      <div className="flex items-center text-blue-600 text-sm font-medium">
+                        📸 Google Places API
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {trips.map((trip) => {
+                    const tripImage = tripImages[trip._id];
+                    const isLoadingImage = loadingImages[trip._id];
+                    
+                    return (
+                      <div
+                        key={trip._id}
+                        className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                      >
+                        {/* Destination Image */}
+                        <div className="relative h-48 overflow-hidden">
+                          {isLoadingImage ? (
+                            <div className="w-full h-full bg-gradient-to-r from-gray-200 to-gray-300 flex items-center justify-center">
+                              <div className="text-center text-gray-500">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                                <p className="text-sm">Loading {trip.destination} image...</p>
+                              </div>
+                            </div>
+                          ) : tripImage ? (
+                            <Image
+                              src={tripImage}
+                              alt={`${trip.destination}, ${trip.state}`}
+                              fill
+                              className="object-cover hover:scale-105 transition-transform duration-300"
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              onError={(e) => {
+                                const target = e.target;
+                                target.src = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center group cursor-pointer"
+                                 onClick={() => retryImageLoad(trip._id, trip.destination, trip.state)}>
+                              <div className="text-center text-white">
+                                <svg className="w-12 h-12 mx-auto mb-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <p className="text-sm font-medium">{trip.destination}</p>
+                                <p className="text-xs opacity-75 mt-1">Click to load image</p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Overlay with basic trip info */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end">
+                            <div className="p-4 text-white w-full">
+                              <div className="flex justify-between items-end">
+                                <div>
+                                  <h3 className="text-xl font-bold truncate">{trip.destination}</h3>
+                                  {trip.state && (
+                                    <p className="text-sm text-gray-200">{trip.state}, India</p>
+                                  )}
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  {/* Trip Status Badge */}
+                                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    trip.status === 'upcoming' ? 'bg-blue-500 text-white' :
+                                    trip.status === 'ongoing' ? 'bg-green-500 text-white' :
+                                    'bg-gray-500 text-white'
+                                  }`}>
+                                    {trip.status || 'upcoming'}
+                                  </div>
+                                  {/* Duration Badge */}
+                                  <div className="flex items-center bg-white bg-opacity-20 rounded-full px-3 py-1 backdrop-blur-sm">
+                                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                                    </svg>
+                                    <span className="text-xs font-medium">{trip.duration} days</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Google Places badge */}
+                          {tripImage && (
+                            <div className="absolute top-3 right-3 bg-white bg-opacity-80 backdrop-blur-sm text-xs px-2 py-1 rounded-full text-gray-700">
+                              📸 Google Places
+                            </div>
+                          )}
+                        </div>
 
                       {/* Trip Details */}
                       <div className="p-6">
@@ -367,7 +509,8 @@ function MyTripsPage() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                  );
+                  })}
                 </div>
 
                 {/* Add New Trip Section */}
