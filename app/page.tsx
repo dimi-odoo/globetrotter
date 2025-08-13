@@ -865,7 +865,7 @@ export default function Home() {
                 Your personalized travel planning companion for incredible India.
               </p>
             </div>
-            <div>
+            {/* <div>
               <h4 className="text-lg font-semibold mb-4">Destinations</h4>
               <ul className="space-y-2 text-gray-400">
                 <li><a href="#" className="hover:text-white">North India</a></li>
@@ -873,21 +873,21 @@ export default function Home() {
                 <li><a href="#" className="hover:text-white">East India</a></li>
                 <li><a href="#" className="hover:text-white">West India</a></li>
               </ul>
-            </div>
+            </div> */}
             <div>
               <h4 className="text-lg font-semibold mb-4">Support</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white">Help Center</a></li>
-                <li><a href="#" className="hover:text-white">Contact Us</a></li>
-                <li><a href="#" className="hover:text-white">Travel Guide</a></li>
+                {/* <li><a href="#" className="hover:text-white">Help Center</a></li> */}
+                <li><Link href="/contact" className="hover:text-white">Contact Us</Link></li>
+                {/* <li><a href="#" className="hover:text-white">Travel Guide</a></li> */}
               </ul>
             </div>
             <div>
               <h4 className="text-lg font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white">About</a></li>
-                <li><a href="#" className="hover:text-white">Blog</a></li>
-                <li><a href="#" className="hover:text-white">Careers</a></li>
+                <li><Link href="/about" className="hover:text-white">About</Link></li>
+                {/* <li><a href="#" className="hover:text-white">Blog</a></li> */}
+                {/* <li><a href="#" className="hover:text-white">Careers</a></li> */}
               </ul>
             </div>
           </div>

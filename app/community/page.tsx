@@ -531,7 +531,7 @@ export default function CommunityPage() {
                              <textarea
                                value={commentInputs[post._id] || ''}
                                onChange={(e) => setCommentInputs({ ...commentInputs, [post._id]: e.target.value })}
-                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                               className="w-full px-3 text-gray-700 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                                placeholder="What are your thoughts on this post? Share your travel experience..."
                                rows={2}
                                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && addComment(post._id)}

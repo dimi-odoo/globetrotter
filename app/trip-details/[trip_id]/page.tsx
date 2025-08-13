@@ -609,23 +609,23 @@ export default function TripDetailsPage() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Duration</span>
-                    <span className="font-medium">{calculateDuration()} days</span>
+                    <span className="text-gray-600 font-medium">{calculateDuration()} days</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Start Date</span>
-                    <span className="font-medium">{formatShortDate(trip.startDate)}</span>
+                    <span className="text-gray-600 font-medium">{formatShortDate(trip.startDate)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">End Date</span>
-                    <span className="font-medium">{formatShortDate(trip.endDate)}</span>
+                    <span className="text-gray-600 font-medium">{formatShortDate(trip.endDate)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Group Size</span>
-                    <span className="font-medium">{trip.travelers} travelers</span>
+                    <span className="text-gray-600 font-medium">{trip.travelers} travelers</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Budget</span>
-                    <span className="font-medium capitalize">{trip.budget}</span>
+                    <span className="text-gray-600 font-medium capitalize">{trip.budget}</span>
                   </div>
                   {trip.totalCost && (
                     <div className="flex justify-between">
@@ -667,15 +667,15 @@ export default function TripDetailsPage() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Created</span>
-                    <span className="font-medium">{formatShortDate(trip.createdAt)}</span>
+                    <span className="text-gray-600 font-medium">{formatShortDate(trip.createdAt)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Last Updated</span>
-                    <span className="font-medium">{formatShortDate(trip.updatedAt)}</span>
+                    <span className="text-gray-600 font-medium">{formatShortDate(trip.updatedAt)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total Activities</span>
-                    <span className="font-medium">
+                    <span className="text-gray-600 font-medium">
                       {trip.itinerary?.reduce((total, day) => total + day.activities.length, 0) || 0}
                     </span>
                   </div>

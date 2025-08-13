@@ -286,7 +286,7 @@ export default function CityPage() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 {getUniqueCategories().map((category) => (
                   <option key={category} value={category}>
@@ -467,7 +467,7 @@ function PlaceCard({ place, cityName, getPlaceImage }: PlaceCardProps) {
         <div className="mt-4 pt-4 border-t border-gray-200">
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-500">Significance</span>
-            <span className="text-sm font-medium capitalize bg-gray-100 px-2 py-1 rounded">
+            <span className="text-sm font-medium text-gray-700 capitalize bg-gray-100 px-2 py-1 rounded">
               {place.significance}
             </span>
           </div>
