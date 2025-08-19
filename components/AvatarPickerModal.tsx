@@ -16,7 +16,7 @@ type AvatarPickerModalProps = {
   onClose: () => void;
   onSelect: (url: string) => void;
 };
-#this line is the for the testing by the dimi 222
+
 export default function AvatarPickerModal({
   isOpen,
   avatars,
